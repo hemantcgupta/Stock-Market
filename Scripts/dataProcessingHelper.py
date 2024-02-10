@@ -13,11 +13,16 @@ import os
 
 def yfDownload(tickerName, period, interval):
     yfTicker = yf.Ticker(tickerName)
-    df = yfTicker.history(period=period).dropna().reset_index()
-    df = yfDownloadProcessing(df)
+    df = yfTicker.history(period=period).dropna().reset_index()    
     dfInterval = yfTicker.history(period='1mo', interval=interval).dropna().reset_index()
+    return df, dfInterval
+
+    
+def yfDownloadingBegingProcess(df, dfInterval):
+    df = yfDownloadProcessing(df)
     dfInterval = yfDownloadProcessingInterval(df, dfInterval)
     return df, dfInterval
+    
 
 def yfDownloadProcessing(df):
     df['Date'] = pd.to_datetime(df['Date'])
@@ -182,6 +187,7 @@ def saveFilesInMachine(symbol, df, subFolder):
 def fetching_all_stock_data_based_on_todays(symbol):
     symbol = symbol+'.NS'
     df, dfInterval = yfDownload(symbol, '1y', '5m')
+    df, dfInterval = yfDownloadingBegingProcess(df, dfInterval)
     df = formulaPercentage(df)
     df = MovingAverage44(df)
     dfInterval = MovingAverage44(dfInterval)
@@ -200,6 +206,7 @@ def fetching_all_stock_data_based_on_todays(symbol):
 
 # symbol = 'BLS' + '.NS'
 # df, dfInterval = yfDownload(symbol, '1y', '5m')
+# df, dfInterval = yfDownloadingBegingProcess(df, dfInterval)
 # df = formulaPercentage(df)
 # df = MovingAverage44(df)
 # dfInterval = MovingAverage44(dfInterval)
@@ -214,10 +221,9 @@ def fetching_all_stock_data_based_on_todays(symbol):
 
 
 
-
-
-
-
-
+# from Scripts.dbConnection import * 
+# # cnxn()
+# Data_Inserting_Into_DB(df, 'stockmarket', 'test')
+# pd.read_sql('''select * from test''', cnxn())
 
 

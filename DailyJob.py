@@ -18,12 +18,16 @@ pd.set_option('display.max_columns', 25)
 pd.set_option('display.max_rows', 20)
 pd.set_option('expand_frame_repr', True)
 
-from dataProcessingHelper import *
+from Scripts.dataProcessingHelper import *
+from Scripts.yfDownload import *
 
+# =============================================================================
+# Start Job
+# =============================================================================
 def fetch_stock_data(symbol):
     return fetching_all_stock_data_based_on_todays(symbol)
 
-if __name__ == "__main__":
+def old_Method():
     stockSymbols = pd.read_csv(r'./Data/stokeSymbol.csv')['SYMBOL \n'][1:].unique()
     with Pool(processes=cpu_count()) as pool:
         dataProbability = list(tqdm(pool.imap(fetch_stock_data, stockSymbols), total=len(stockSymbols)))
@@ -33,8 +37,6 @@ if __name__ == "__main__":
 
 
 
-# stockSymbols = pd.read_csv(r'stokeSymbol.csv')['SYMBOL \n'][1:].unique()
-# dataProbability = [fetching_all_stock_data_based_on_todays(symbol) for symbol in tqdm(stockSymbols)] 
-# df = pd.DataFrame(dataProbability)
-# df = df.sort_values(by='ProbabilityOfProfitMT2Percent', ascending=False)
-# df.to_excel(fr"./Data/Probability/{df['Date'].astype(str)[0]}.xlsx", index=False)
+if __name__ == "__main__":
+    old_Method()
+   
