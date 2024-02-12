@@ -187,21 +187,25 @@ def saveFilesInMachine(symbol, df, subFolder):
 def fetching_all_stock_data_based_on_todays(symbol):
     symbol = symbol+'.NS'
     df, dfInterval = yfDownload(symbol, '1y', '5m')
-    df, dfInterval = yfDownloadingBegingProcess(df, dfInterval)
-    df = formulaPercentage(df)
-    df = MovingAverage44(df)
-    dfInterval = MovingAverage44(dfInterval)
-    dfInterval = find_support_resistance(dfInterval)
-    dfCandle = pd.merge(pd.merge(dfInterval.groupby('Date') ['CandleP/N_OpenDay'].value_counts().unstack(fill_value=0).reset_index().rename(columns={-1: 'nCandleBelowOpen', 1: 'pCandleAboveOpen'}), dfInterval.groupby('Date') ['CandleP/N'].value_counts().unstack(fill_value=0).reset_index().rename(columns={-1: 'nCandle', 1: 'pCandle'}), how='left', on='Date'), dfInterval.groupby('Date') ['44TF'].value_counts().unstack(fill_value=0).reset_index().rename(columns={1: 'Hits44MA'})[['Date', 'Hits44MA']], how='left', on='Date')
-    dfEtEx = pd.merge(EntryExitMinToMax(dfInterval), EntryExitMaxToMin(dfInterval), how='left', on='Date')
-    dfItCd = pd.merge(dfCandle, dfEtEx,how='left', on='Date')
-    df = pd.merge(df, dfItCd, how='left', on='Date')
-    saveFilesInMachine(symbol, df, 'Processing')
-    dfInterval['Datetime'] = dfInterval['Datetime'].dt.tz_localize(None)
-    saveFilesInMachine(symbol, dfInterval, 'intervalData')
-    df = df.dropna().reset_index(drop=True)
-    dct = ProbabilityDataProcessing(df, dfInterval, symbol)
-    return dct
+    if len(df) != 0 and len(dfInterval) != 0:
+        df, dfInterval = yfDownloadingBegingProcess(df, dfInterval)
+        df = formulaPercentage(df)
+        df = MovingAverage44(df)
+        dfInterval = MovingAverage44(dfInterval)
+        dfInterval = find_support_resistance(dfInterval)
+        dfCandle = pd.merge(pd.merge(dfInterval.groupby('Date') ['CandleP/N_OpenDay'].value_counts().unstack(fill_value=0).reset_index().rename(columns={-1: 'nCandleBelowOpen', 1: 'pCandleAboveOpen'}), dfInterval.groupby('Date') ['CandleP/N'].value_counts().unstack(fill_value=0).reset_index().rename(columns={-1: 'nCandle', 1: 'pCandle'}), how='left', on='Date'), dfInterval.groupby('Date') ['44TF'].value_counts().unstack(fill_value=0).reset_index().rename(columns={1: 'Hits44MA'})[['Date', 'Hits44MA']], how='left', on='Date')
+        dfEtEx = pd.merge(EntryExitMinToMax(dfInterval), EntryExitMaxToMin(dfInterval), how='left', on='Date')
+        dfItCd = pd.merge(dfCandle, dfEtEx,how='left', on='Date')
+        df = pd.merge(df, dfItCd, how='left', on='Date')
+        saveFilesInMachine(symbol, df, 'Processing')
+        dfInterval['Datetime'] = dfInterval['Datetime'].dt.tz_localize(None)
+        saveFilesInMachine(symbol, dfInterval, 'intervalData')
+        df = df.dropna().reset_index(drop=True)
+        dct = ProbabilityDataProcessing(df, dfInterval, symbol)
+        return dct
+    else:
+        print(symbol)
+        return {}
 
 
 # symbol = 'BLS' + '.NS'

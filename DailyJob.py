@@ -19,7 +19,6 @@ pd.set_option('display.max_rows', 20)
 pd.set_option('expand_frame_repr', True)
 
 from Scripts.dataProcessingHelper import *
-from Scripts.yfDownload import *
 
 # =============================================================================
 # Start Job

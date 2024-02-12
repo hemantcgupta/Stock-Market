@@ -26,7 +26,7 @@ def cnxn(dbName):
 # =============================================================================
 # Data Inserting into tables
 # =============================================================================
-def Data_Inserting_Into_DB(df, dbName, Table_Name):
+def Data_Inserting_Into_DB(df, dbName, Table_Name, insertMethod):
     try:
         params = urllib.parse.quote_plus('''DRIVER=SQL Server Native Client 11.0;
                                             SERVER=DESKTOP-4ABRK6A\SQLEXPRESS;
@@ -41,7 +41,7 @@ def Data_Inserting_Into_DB(df, dbName, Table_Name):
         chunksize = int(len(df)/10)       
         if len(df) <= 1000:
             chunksize = len(df)
-        df.to_sql(Table_Name, engine, if_exists = 'append', index=False, chunksize = chunksize)
+        df.to_sql(Table_Name, engine, if_exists = insertMethod, index=False, chunksize = chunksize)
         return {Table_Name: 'successful'}
-    except:
-        return {Table_Name: 'unsuccessful'}
+    except Exception as e:
+        return {Table_Name: e}
