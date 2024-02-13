@@ -49,7 +49,7 @@ def formulaPercentage(df):
     df['maxHigh'] = ((df['High']/df['Open']-1)*100).round(2)
     df['maxLow'] = ((df['Low']/df['Open']-1)*100).round(2)
     df['Open-PvClose'] = (df['Open']-df['PvClose']).round(2)  
-    df['closeTolerance'] = df.apply(lambda row: row['P/L'] - row['maxHigh'] if row['P/L'] > 0 else row['P/L'] - row['maxLow'] if row['P/L'] < 0 else 0, axis=1)
+    df['closeTolerance'] = df.apply(lambda row: row['P/L'] - row['maxHigh'] if row['P/L'] > 0 else row['P/L'] - row['maxLow'] if row['P/L'] < 0 else 0, axis=1).round(2)
     df['priceBand'] = (((df['High'] - df['Low'])/df['Open'])*100).round(2)
     return df
 

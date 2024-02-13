@@ -57,7 +57,7 @@ def ydDownloadClenning(df):
     
 def MK_Data_insert(df, dbName, tickerName, insertMethod):
     if not df.empty:
-        result = Data_Inserting_Into_DB(df, 'stockmarketday', tickerName, 'append')
+        result = Data_Inserting_Into_DB(df, dbName, tickerName, insertMethod)
         return result
     else: 
         return 'Empty DataFrame'
