@@ -1,0 +1,310 @@
+@import "./Constants/color.scss";
+
+.ag-grid-table {
+  .align-left {
+    text-align: left;
+  }
+  .align-right {
+    text-align: right;
+  }
+  .align-left-underline {
+    text-align: left;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .align-right-underline {
+    text-align: right;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .highlight-dBlue-row {
+    background-color: $darkBlue !important;
+  }
+  .approved-row {
+    background-color: $darkerGreen !important;
+  }
+  .rejected-row {
+    background-color: $red !important;
+  }
+  .highlight-row {
+    background-color: #005880 !important;
+  }
+  .remove-highlight-row {
+    background-color: transparent !important;
+  }
+  .ag-row-disableChkbox {
+    .ag-cell .ag-cell-wrapper {
+      .ag-selection-checkbox {
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+    }
+  }
+  .hide-row {
+    display: none;
+  }
+  .ag-header {
+    background-color: $blue !important;
+    color: $white !important;
+  }
+  .ag-header-group-cell {
+    justify-content: center;
+  }
+  .ag-header-group-cell::after {
+    border-right: 1px solid $white !important;
+  }
+  .ag-header-group-cell:last-child::after {
+    border-right: none !important;
+  }
+  .ag-header-group-cell-label {
+    justify-content: center;
+  }
+  .ag-header-cell {
+    border-top: 1px solid $white !important;
+  }
+  .ag-header-cell::after {
+    border-right: 1px solid $white !important;
+  }
+  .ag-header-cell:last-child::after {
+    border-right: none !important;
+  }
+  .ag-header-cell-label {
+    .ag-header-icon {
+      margin-left: 0px !important;
+    }
+  }
+  .ag-cell {
+    font-size: 10.5px !important;
+  }
+  .ag-icon {
+    color: $white !important;
+  }
+  .ag-overlay-no-rows-center {
+    margin-top: 20px !important;
+  }
+  .fa-arrow-up {
+    color: $green !important;
+    margin-left: 3px !important;
+  }
+  .fa-arrow-down {
+    color: $red !important;
+    margin-left: 3px !important;
+  }
+  .fa-bell {
+    margin-right: 5px !important;
+    cursor: pointer;
+  }
+  .ag-paging-page-summary-panel {
+    .ag-icon {
+      color: $dark_grey !important;
+    }
+    .ag-paging-button.ag-disabled {
+      .ag-icon {
+        opacity: 1 !important;
+        color: $dark_grey !important;
+      }
+    }
+  }
+  .customHeaderLabel {
+    overflow: hidden;
+  }
+  .ag-cell-data-changed {
+    background-color: $darkerGreen !important;
+  }
+}
+
+.totalRow {
+  .ag-body-viewport.ag-layout-normal {
+    overflow-y: hidden;
+  }
+  .ag-overlay-no-rows-center {
+    margin-top: 45px !important;
+  }
+  .ag-row {
+    background-color: $blue !important;
+  }
+  .ag-ltr .ag-cell {
+    border-right: 1px solid $white !important;
+  }
+  .ag-body-horizontal-scroll {
+    display: none;
+  }
+  .ag-cell-data-changed {
+    background-color: $green !important;
+  }
+}
+
+.changeBgColor {
+  .ag-row {
+    background-color: $primaryColor !important;
+  }
+  .ag-ltr .ag-cell {
+    border-right: 1px solid $primaryColor !important;
+  }
+}
+
+.custom-tooltip {
+  position: absolute;
+  width: 150px;
+  height: 25px;
+  pointer-events: none;
+  transition: opacity 1s;
+  line-height: 2;
+  font-size: 1vw;
+}
+
+.tooltip-content {
+  padding-left: 5px;
+  padding-right: 5px;
+  background: #0d1016;
+  line-height: 2;
+  width: min-content;
+  clear: both;
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.reduce-padding {
+  .ag-cell {
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+  }
+  .ag-header-cell {
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+  }
+}
+
+@media (max-height: 620px) {
+  .responsive-height {
+    height: 22vh !important;
+  }
+  .route-height {
+    height: 23vh !important;
+    .ag-header-cell-label .ag-header-cell-text {
+      font-size: 10px !important;
+    }
+    .ag-cell {
+      font-size: 10px !important;
+    }
+    .fa-arrow-up {
+      margin-left: 2px !important;
+    }
+    .fa-arrow-down {
+      margin-left: 2px !important;
+    }
+  }
+  .pos-height {
+    height: 23vh !important;
+    .ag-header-cell-label .ag-header-cell-text {
+      font-size: 10px !important;
+    }
+    .ag-cell {
+      font-size: 10px !important;
+    }
+    .fa-arrow-up {
+      margin-left: 2px !important;
+    }
+    .fa-arrow-down {
+      margin-left: 2px !important;
+    }
+  }
+
+  .dasboard-height {
+    height: 17vh !important;
+    // .ag-row-no-animation .ag-row{
+    //   height: 18px !important;
+    // }
+    .ag-header-cell-label .ag-header-cell-text {
+      font-size: 10px !important;
+    }
+    .ag-header-cell::after {
+      margin-top: 2px !important;
+    }
+    .ag-cell {
+      line-height: 10px !important;
+      font-size: 8px !important;
+    }
+  }
+
+  .route-dashboard {
+    height: 20vh !important;
+    .ag-header-cell-label .ag-header-cell-text {
+      font-size: 10px !important;
+    }
+    .ag-header-cell::after {
+      margin-top: 2px !important;
+    }
+    .ag-cell {
+      line-height: 10px !important;
+      font-size: 9px !important;
+    }
+  }
+
+  .totalRow-cell {
+    .ag-header-cell-label .ag-header-cell-text {
+      font-size: 10px !important;
+    }
+    .ag-header-cell::after {
+      margin-top: 2px !important;
+    }
+    .ag-cell {
+      line-height: 10px !important;
+      font-size: 8px !important;
+    }
+  }
+
+  .totalRow-reduce-fontSize {
+    .ag-header-cell-label .ag-header-cell-text {
+      font-size: 10px !important;
+    }
+    .ag-cell {
+      font-size: 10px !important;
+    }
+    .fa-arrow-up {
+      margin-left: 2px !important;
+    }
+    .fa-arrow-down {
+      margin-left: 2px !important;
+    }
+  }
+
+  .top-market-height {
+    height: 18vh !important;
+  }
+
+  .channel-height {
+    height: 42vh !important;
+    .ag-header-cell-label .ag-header-cell-text {
+      font-size: 10px !important;
+    }
+    .ag-cell {
+      font-size: 10px !important;
+    }
+    .fa-arrow-up {
+      margin-left: 2px !important;
+    }
+    .fa-arrow-down {
+      margin-left: 2px !important;
+    }
+  }
+
+  .ag-icon {
+    font-size: 12px !important;
+  }
+  .reduce-padding {
+    .ag-header-cell {
+      padding-left: 2px !important;
+      padding-right: 2px !important;
+    }
+  }
+  .ag-header-group-cell-label {
+    width: 110px;
+  }
+  .ag-grid-table {
+    .ag-overlay-no-rows-center {
+      margin-top: 65px !important;
+    }
+  }
+}

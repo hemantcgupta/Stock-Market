@@ -1,0 +1,66 @@
+@import "../../Constants/color";
+/* -------------------------------- 
+
+Primary style
+
+-------------------------------- */
+.competitor-analysis {
+  .competitor-analysis-main {
+    background-color: $darkPrimary;
+    margin-top: 10px;
+    height: calc(100vh - 71px);
+    padding: 5px 15px 0px 15px;
+  }
+  .navdesign {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    flex-wrap: wrap;
+    margin-top: 0px;
+  }
+  .top-heading {
+    border-bottom: 1px solid white;
+    padding-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    section h2 {
+      width: 100%;
+      font-size: 24px !important;
+      font-weight: 400;
+      text-align: left;
+      margin-bottom: 10px;
+    }
+    .form-group {
+      margin: 0px 13px;
+      display: flex;
+    }
+    h4 {
+      margin-right: 5px;
+    }
+  }
+  .drop-down-main {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 20px;
+    margin-bottom: 14px;
+    .form-group {
+      display: flex;
+      align-items: center;
+      margin: 0px 13px;
+    }
+
+    h4 {
+      margin-right: 10px;
+      font-size: 1vw;
+    }
+  }
+  .table-name {
+    margin-top: 0px;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+

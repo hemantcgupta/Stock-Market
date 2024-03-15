@@ -1,0 +1,7 @@
+djangorestframework
+Django==2.1.15
+django-pyodbc-azure-2019
+django-pyodbc
+django-pymssql
+django-pandas
+django-user-agents

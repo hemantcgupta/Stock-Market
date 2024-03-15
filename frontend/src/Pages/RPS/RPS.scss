@@ -1,0 +1,220 @@
+@import "../../Constants/color.scss";
+/* -------------------------------- 
+
+Primary style
+
+-------------------------------- */
+.rps {
+  .top {
+    background-color: $gray;
+    padding: 5px;
+  }
+
+  .active-btn {
+    background-color: $darkOrange;
+  }
+
+  .cd-breadcrumb li {
+    font-size: 14px;
+    margin: 0px 8px 0px 0px !important;
+  }
+  .row {
+    display: flex;
+    justify-content: space-between;
+  }
+  .toggle1 {
+    display: flex;
+    align-items: center;
+    h2 {
+      margin: 10px;
+      font-size: 17px !important;
+    }
+    .pos-route-dropdown {
+      width: 105px;
+      padding: 0px 5px;
+    }
+    .route-access {
+      position: relative;
+      cursor: pointer;
+      margin-left: 10px;
+      font-size: 14px;
+      color: $white;
+      .route-groups {
+        visibility: hidden;
+        font-size: 13px;
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        z-index: 11;
+        background: rgba(0, 0, 0, 0.7294117647058823);
+        padding: 8px;
+        border-radius: 8px;
+        left: -8px;
+        top: 22px;
+      }
+      .triangle-up {
+        visibility: hidden;
+        width: 0;
+        height: 0;
+        border-left: 24px solid transparent;
+        border-right: 24px solid transparent;
+        border-bottom: 41px solid rgba(0, 0, 0, 0.7294117647058823);
+        position: absolute;
+        top: 15px;
+        left: -14px;
+      }
+    }
+    .route-access:hover {
+      .route-groups {
+        visibility: visible;
+      }
+      .triangle-up {
+        visibility: visible;
+      }
+    }
+    .route-main {
+      border-bottom: 1px solid;
+      padding-bottom: 5px;
+      margin-bottom: 5px;
+    }
+    .international {
+      border-bottom: none;
+      margin-bottom: 0px;
+      padding-bottom: 0px;
+    }
+    .route-main-disable {
+      cursor: not-allowed;
+    }
+    .route-access-disable {
+      pointer-events: none;
+    }
+    .breadcrumb-disable {
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+  }
+  .toggle2 {
+    float: right;
+    display: flex;
+    justify-content: flex-end;
+    .cabin-selection {
+      border: none;
+      margin-right: 0px;
+    }
+    .form-group {
+      display: flex;
+      margin-bottom: 0px;
+      margin-right: 15px;
+      h4 {
+        margin-right: 5px;
+      }
+      select {
+        width: 80px;
+      }
+    }
+  }
+
+  .x_panel {
+    margin-top: 10px;
+    height: calc(100vh - 130px);
+    display: flex;
+    flex-direction: column;
+    .x_content {
+      h4 {
+        width: 120px;
+      }
+      .versions {
+        display: flex;
+        margin-top: 10px;
+        width: 50%;
+        select {
+          margin-left: 10px;
+        }
+        label {
+          font-weight: unset;
+          margin: 10px 10px 0px 5px;
+        }
+        input {
+          margin-top: 13px;
+          cursor: pointer;
+        }
+      }
+    }
+    .x_content2 {
+      flex: 4;
+    }
+    .btn-main {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      margin-top: 22px;
+      flex: 1;
+      .search {
+        background: $darkOrange;
+        width: 140px;
+        outline: none;
+        border: none;
+        height: 35px;
+      }
+      .search:hover,
+      .search:focus {
+        color: $white;
+      }
+    }
+  }
+
+  /* -------------------------------- 
+    
+    Basic Style
+    
+    -------------------------------- */
+  .MuiToolbar-regular {
+    display: none;
+  }
+  .cd-breadcrumb {
+    display: flex;
+    margin: 0px;
+    align-items: center;
+  }
+  .cd-breadcrumb:after,
+  .cd-multi-steps:after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+  .cd-breadcrumb li,
+  .cd-multi-steps li {
+    display: inline-block;
+    float: left;
+    margin: 0.5em 0;
+    cursor: pointer;
+    min-width: auto;
+    max-width: 110px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+}
+
+.resetpass-body {
+  p {
+    color: $red;
+    margin-bottom: 0px;
+  }
+  .form-control {
+    height: 100px;
+  }
+}
+
+@media (max-height: 620px) {
+  .cd-breadcrumb li,
+  .cd-multi-steps li {
+    max-width: 110px !important;
+  }
+}
+
+@media (max-height: 768px) and (min-height: 619px) {
+  .responsive-height {
+    height: 24vh !important;
+  }
+}

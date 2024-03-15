@@ -1,0 +1,153 @@
+/* Indicators Progress CSS */
+#indicator_progress {
+    height: 5px;
+    margin-bottom: 0px;
+    border-radius: 4px;
+}
+/* /Indicators Progress CSS */
+
+/* Multiline chart SVG CSS */
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+/*.x.axis path {
+    display: none;
+}
+*/
+.line {
+    fill: none;
+    stroke: #64bbe3;
+    stroke-width: 1.5px;
+}
+/*svg{
+    border:1px solid black;
+}*/
+.grid {
+    fill: none;
+    shape-rendering: crispEdges;
+    stroke: #b7b2b242;
+    opacity: 1;
+    stroke-width: 1px;
+    stroke-dasharray: 5,6;
+}
+.segmentText{
+    cursor:pointer;
+}
+div.tooltip {
+    position: absolute;
+    text-align: center;
+    width: auto;
+    /*height: 50px;*/
+    /* padding: 15px 3px; */
+    font: 12px sans-serif;
+    background: #ddd;
+    border: solid 1px #aaa;
+    border-radius: 8px;
+    pointer-events: none;
+}
+
+/* Multiline chart SVG CSS End */
+
+/* PieChart SVG CSS start */
+#region_pieChart{
+    /*padding: 0% 10%;    */
+    padding: 0% 0% 0% 5%;
+}
+.pie {
+  margin: 20px;
+}
+#myPie > svg.pie {
+    float: left;
+}
+.legend {
+  float: left;
+  font-family: "Verdana";
+  font-size: .7em;
+}
+.pie text {
+  font-family: "Verdana";
+  fill: #000;
+}
+.pie .name-text{
+  font-size: .8em;
+}
+.pie .value-text{
+  font-size: 3em;
+}
+
+/* PieChart SVG CSS End */
+
+/* Pivot Table */
+#datatable-pivot_length, #datatable-top10Routes_length{
+  width: 32%;
+}
+#datatable-pivot_filter, #datatable-top10Routes_filter{
+  width: 40%;
+}
+/* /Pivot Table CSS End */
+
+/* BarChart CSS */
+.dash_barChart{
+  fill: #20c997;
+}
+
+.dash_barChart:hover{
+  fill: brown;
+}
+
+.bar_axis {
+  font: 10px sans-serif;
+}
+
+.bar_axis path,
+.bar_axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+.d3-tip {
+  line-height: 1;
+  font-weight: bold;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 2px;
+}
+
+/* Creates a small triangle extender for the tooltip */
+.d3-tip:after {
+  box-sizing: border-box;
+  display: inline;
+  font-size: 10px;
+  width: 100%;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.8);
+  content: "\25BC";
+  position: absolute;
+  text-align: center;
+}
+
+/* Style northward tooltips differently */
+.d3-tip.n:after {
+  margin: -1px 0 0 0;
+  top: 100%;
+  left: 0;
+}
+
+.tick line{
+  opacity: 0.2;
+  stroke-dasharray: 5,5;
+}
+/* /BarChart CSS End */
+
+/* MUI-datatables CSS */
+.MuiPaper-elevation4-13 {
+  /* box-shadow: 0px 2px 4px -1px rgba(0,0,0,0.2), 0px 4px 5px 0px rgba(0,0,0,0.14), 0px 1px 10px 0px rgba(0,0,0,0.12); */
+  box-shadow: none;
+}
+
+/* /MUI-datatables CSS */

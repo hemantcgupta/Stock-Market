@@ -1,0 +1,27 @@
+
+.country-name {
+    margin: 0 !important;
+}
+.queens { background: rgb(100, 187, 227);}
+.kings { background: rgb(238, 210, 2);}
+.bronx { background: rgb(105, 194, 66);}
+
+.key-dot {
+    display: inline-block;
+    height: 10px;
+    margin-right: .5em;
+    width: 10px;
+    font-family: "Helvetica Neue",Roboto,Arial,"Droid Sans",sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+}
+
+#legend2{
+    overflow:hidden;
+    padding-left: 30%;
+    padding-bottom: 3%;
+}
+.legend2 {
+    float:left;
+    padding-right: 6%;
+}

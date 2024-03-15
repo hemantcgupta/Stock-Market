@@ -1,0 +1,214 @@
+@import "../../Constants/color";
+
+.alerts {
+  padding: 20px;
+  background-color: $darkPrimary;
+  margin: 10px;
+  height: calc(100vh - 72px);
+  .date-picker-btn {
+    background-color: $darkPrimary;
+    color: $white;
+    border: none;
+    width: 100%;
+    border: 1px solid;
+    margin-top: 10px;
+    margin-bottom: 0px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .triangle {
+    display: flex;
+    justify-content: center;
+    .triangle-up {
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-bottom: 11px solid white;
+      position: absolute;
+      animation: fadein ease 0.2s;
+    }
+    @keyframes fadein {
+      0% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+  }
+  .add {
+    margin-bottom: 30px;
+    padding-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid $dark_grey;
+    h2 {
+      color: $lightGreen !important;
+      font-size: 24px !important;
+    }
+  }
+  .alerts-form {
+    display: flex;
+    align-items: flex-end;
+    .form-group {
+      width: 25%;
+      margin-right: 30px;
+    }
+    .MuiSlider-root {
+      color: $orange;
+    }
+    label {
+      color: $white;
+      font-size: 14px;
+    }
+    input {
+      background-color: $darkPrimary;
+      color: $white;
+      margin-top: 10px;
+    }
+    .btn {
+      margin-bottom: 10px;
+      background: $darkOrange;
+      width: 150px;
+      outline: none;
+      border: none;
+      height: 35px;
+    }
+    .events-dropdown {
+      width: 100%;
+      border: 1px solid;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+  }
+
+  .alerts-card {
+    margin-top: 40px;
+    overflow: auto;
+    height: calc(100vh - 320px);
+    .card-main {
+      display: flex;
+      flex-wrap: wrap;
+      h4 {
+        color: $white !important;
+        margin: 20px 0px !important;
+        font-size: 20px !important;
+      }
+      .fa {
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .fa-trash {
+        margin-left: 15px;
+      }
+      .ag-overlay-no-rows-center {
+        margin-top: 20px !important;
+      }
+    }
+  }
+
+  .audit-logs-table {
+    margin-top: 50px;
+    h4 {
+      color: $white !important;
+      margin: 20px 0px !important;
+      font-size: 20px !important;
+    }
+    .fa {
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .fa-trash {
+      margin-left: 15px;
+    }
+    .ag-overlay-no-rows-center {
+      margin-top: 20px !important;
+    }
+  }
+
+  .alerts-setting-form {
+    display: flex;
+    flex-wrap: wrap;
+    .form-group {
+      width: 11%;
+      margin-right: 40px;
+      p{
+        color: $redText;
+        margin-top: 2px;
+      }
+      .MuiSlider-root {
+        color: $orange;
+      }
+      .slider {
+        position: relative;
+        .end {
+          position: absolute;
+          right: 0px;
+        }
+      }
+      label {
+        color: $white;
+        font-size: 14px;
+        margin-bottom: 15px;
+        text-transform: capitalize;
+      }
+      input {
+        background-color: $darkPrimary;
+        color: $white;
+        margin-top: 10px;
+      }
+    }
+    .events-dropdown {
+      width: 100%;
+      border: 1px solid;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+  }
+  .action-btn {
+    display: flex;
+    align-items: center;
+    .btn {
+      margin-top: 20px;
+      margin-bottom: 10px;
+      background: $darkOrange;
+      width: 150px;
+      outline: none;
+      border: none;
+      height: 35px;
+    }
+  }
+}
+
+
+.users-initials {
+  h5 {
+    font-size: 13px;
+    letter-spacing: 0.3px;
+  }
+  .users-initials-main {
+    display: flex;
+    flex-flow: wrap;
+    .users-circle {
+      width: 40px;
+      height: 40px;
+      background: $darkPrimary;
+      border-radius: 20px;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      margin-right: 4px;
+      margin-bottom: 4px;
+    }
+    .initial {
+      color: white;
+      font-size: 22px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+  }
+}

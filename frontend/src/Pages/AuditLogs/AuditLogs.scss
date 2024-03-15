@@ -1,0 +1,102 @@
+@import "../../Constants/color";
+
+.audit-logs-search {
+  padding: 20px;
+  background-color: $darkPrimary;
+  margin: 10px;
+  height: calc(100vh - 72px);
+  .date-picker-btn {
+    background-color: $darkPrimary;
+    color: $white;
+    border: none;
+    width: 100%;
+    border: 1px solid;
+    margin-top: 10px;
+    margin-bottom: 0px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .triangle {
+    display: flex;
+    justify-content: center;
+    .triangle-up {
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-bottom: 11px solid white;
+      position: absolute;
+      animation: fadein ease 0.2s;
+    }
+    @keyframes fadein {
+      0% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+  }
+  .add {
+    margin-bottom: 30px;
+    padding-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid $dark_grey;
+    h2 {
+      color: $lightGreen !important;
+      font-size: 24px !important;
+    }
+  }
+  .module-form {
+    display: flex;
+    align-items: flex-end;
+    .form-group {
+      width: 25%;
+      margin-right: 30px;
+    }
+    label {
+      color: $white;
+      font-size: 14px;
+    }
+    input {
+      background-color: $darkPrimary;
+      color: $white;
+      margin-top: 10px;
+    }
+    .btn {
+      margin-bottom: 10px;
+      background: $darkOrange;
+      width: 150px;
+      outline: none;
+      border: none;
+      height: 35px;
+    }
+    .events-dropdown {
+      width: 100%;
+      border: 1px solid;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+  }
+  .audit-logs-table {
+    margin-top: 50px;
+    h4 {
+      color: $white !important;
+      margin: 20px 0px !important;
+      font-size: 20px !important;
+    }
+    .fa {
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .fa-trash {
+      margin-left: 15px;
+    }
+    .ag-overlay-no-rows-center {
+      margin-top: 20px !important;
+    }
+  }
+}

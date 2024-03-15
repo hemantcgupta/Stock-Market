@@ -1,0 +1,163 @@
+@import "../../Constants/color.scss";
+
+.rpsSelectionHeading {
+  h3 {
+    margin-left: 10px !important;
+  }
+}
+
+.Boxes1 {
+  // border: 2px solid black;
+  height: auto;
+  padding: 4px;
+  margin-left: 2%;
+  display: flex;
+  flex-direction: column;
+  width: 60%;
+}
+.Boxes2 {
+  display: flex;
+  margin-left: 4%;
+  // margin-top: -1%;
+  // border: 2px solid black;
+  height: auto;
+}
+.Boxes2 h4 {
+  font-size: 1.7rem !important;
+}
+// .interline-details {
+//   .top {
+//     background-color: $gray;
+//     padding: 0px;
+//     height: 100vh;
+//   }
+// }
+
+.MIDT {
+  visibility: hidden;
+  width: 240px;
+  background-color: white;
+  color: black;
+  text-align: center;
+  border-radius: 0px;
+  margin-top: -20px;
+  margin-left: 55px;
+  opacity: 0.8;
+  font-size: 1.5rem !important;
+  // padding: 5px 0;
+}
+.MIDTReal:hover .MIDT {
+  visibility: visible;
+}
+
+.pos-details {
+  .row h2 {
+    width: 100%;
+    color: $secondaryColor;
+    font-size: 2rem !important;
+    font-weight: 600;
+    text-align: left;
+    margin-left: 2%;
+  }
+  .upperBoxes {
+    display: flex;
+    margin-left: 0.4%;
+  }
+  .OuterContainer {
+    width: 49vw;
+    height: 60vh;
+    border: 2px solid black;
+    margin-top: 0px;
+    p {
+      font-size: 1.8rem;
+    }
+  }
+  .rightBox {
+    display: flex;
+    flex-direction: column;
+    border: 2px solid black;
+    height: 60vh;
+    width: 49vw;
+    .percentSuffix {
+      font-size: 2.6vh;
+    }
+    .Box3-1 {
+      height: 9.2vh;
+      margin-left: 3%;
+      font-size: 2vh;
+    }
+    .wpgf-style {
+      display: flex;
+      margin-top: 17px;
+      // border-bottom-style: solid;
+      // border-bottom-color: #fff;
+    }
+    // .bordercolor{
+    //   margin-top: 30px;
+
+    // }
+    .WPGF {
+      visibility: hidden;
+      width: 210px;
+      background-color: white;
+      color: black;
+      text-align: center;
+      border-radius: 0px;
+      margin-top: -20px;
+      margin-left: -215px;
+      opacity: 0.8;
+      font-size: 1.5rem;
+      // padding: 5px 0;
+    }
+    .WPGFReal:hover .WPGF {
+      visibility: visible;
+    }
+    .Box3 {
+      // border: 2px solid black;
+      height: 9.2vh;
+      margin-left: 3%;
+      font-size: 2vh;
+      margin-top: 10%;
+    }
+    .form-control {
+      color: white;
+      background-color: "#2e303f";
+      width: "30%";
+      height: "4vh";
+    }
+  }
+  .lowerBoxes {
+    display: flex;
+    margin-top: -1.4%;
+    margin-left: 0.4%;
+  }
+  .lowerLeftBox {
+    border: 2px solid black;
+    width: 49vw;
+    height: 17vh;
+  }
+  .lowerRightBox {
+    border: 2px solid black;
+    width: 49vw;
+    height: 17vh;
+  }
+  .lowerInsiderBox {
+    // margin-right: 8%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    h4 {
+      font-size: 2rem !important;
+    }
+  }
+  .submitBtn {
+    background-color: orangered;
+    height: 4vh;
+    width: 8vw;
+    margin: auto;
+    cursor: pointer;
+    border-radius: 6px;
+    margin-top: -1%;
+  }
+}

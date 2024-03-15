@@ -1,0 +1,223 @@
+.roudborder{
+    padding: 1rem 5% !important;
+    margin-bottom: 2rem!important;
+    box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important;
+    border-radius: .25rem!important;
+}
+.roudborder h4{
+    font-size:16px;
+}
+.grid_division{
+    padding: 2rem!important;
+    margin-bottom: 2rem!important;
+    box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important;
+    border-radius: .25rem!important;
+}
+.grid_project_division{
+    padding: 2rem!important;
+    margin-bottom: 2rem!important;
+    box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important;
+    border-radius: .25rem!important;
+}
+.grid_division h4{
+    font-size:14px;
+}
+.grid_project_division p{
+    font-size:11px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+#grid_prjt_divisions{
+    height:50%;
+    overflow:scroll;
+    overflow-x:hidden;
+}
+#btn-submit{
+    border-radius: 0px;
+    border: none;
+    font-size: 15px;
+    font-family: Dubai-Medium;
+}
+#btn-text{
+    font-family: 'Dubai-Medium', sans-serif !important;
+    float: left;
+}
+#btn-icon{
+  float: right;
+}
+
+.input-group-addon
+{
+    border:0;
+    background:transparent;
+}
+
+/******************** Menu Bar *********************/
+
+.nav-side-menu {
+  overflow: scroll;
+  overflow-x:hidden;
+  font-family: verdana;
+  font-weight: 200;
+  background-color: #2e353d;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  width:15%;
+  height: 100%;
+  color: #e1ffff;
+}
+.nav-side-menu .brand {
+  background-color: #23282e;
+  line-height: 50px;
+  display: block;
+  text-align: center;
+  font-size: 13px;
+}
+.nav-side-menu ul,
+.nav-side-menu li {
+  list-style: none;
+  padding: 0px;
+  margin: 0px;
+  line-height: 35px;
+  cursor: pointer;
+
+}
+.nav-side-menu ul :not(collapsed) .arrow:before,
+.nav-side-menu li :not(collapsed) .arrow:before {
+  font-family: FontAwesome;
+  content: "\f078";
+  display: inline-block;
+  padding-left: 10px;
+  padding-right: 10px;
+  vertical-align: middle;
+  float: right;
+}
+.nav-side-menu ul .active,
+.nav-side-menu li .active {
+  border-left: 3px solid #d19b3d;
+  background-color: #4f5b69;
+}
+
+.nav-side-menu ul .sub-menu li.active,
+.nav-side-menu li .sub-menu li.active {
+  color: #d19b3d;
+}
+.nav-side-menu ul .sub-menu li.active a,
+.nav-side-menu li .sub-menu li.active a {
+  color: #d19b3d;
+}
+.nav-side-menu ul .sub-menu li,
+.nav-side-menu li .sub-menu li {
+  background-color: #181c20;
+  border: none;
+  line-height: 28px;
+  border-bottom: 1px solid #23282e;
+  margin-left: 0px;
+  font-size:11px;
+}
+.nav-side-menu ul .sub-menu li:hover,
+.nav-side-menu li .sub-menu li:hover {
+  background-color: #020203;
+}
+.nav-side-menu ul .sub-menu li:before,
+.nav-side-menu li .sub-menu li:before {
+  font-family: FontAwesome;
+  content: "\f105";
+  display: inline-block;
+  padding-left: 10px;
+  padding-right: 10px;
+  vertical-align: middle;
+}
+.nav-side-menu li {
+  padding-left: 0px;
+  border-left: 3px solid #2e353d;
+  border-bottom: 1px solid #23282e;
+}
+.nav-side-menu li a {
+  text-decoration: none;
+  color: #e1ffff;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.nav-side-menu li a i {
+  padding-left: 10px;
+  width: 20px;
+  padding-right: 20px;
+}
+.nav-side-menu li:hover {
+  border-left: 3px solid #d19b3d;
+  background-color: #4f5b69;
+  -webkit-transition: all 1s ease;
+  -moz-transition: all 1s ease;
+  -o-transition: all 1s ease;
+  -ms-transition: all 1s ease;
+  transition: all 1s ease;
+}
+
+.program_divisions{
+    font-size:15px;
+}
+
+.breadcrumb
+{
+    background:none;
+}
+/******************** // Menu Bar *********************/
+
+
+
+
+.breadcrumb {
+  padding: 0px 0px 15px 16px;
+  list-style: none;
+}
+.breadcrumb li {
+    font-size: 12px;
+    border: 1px solid #919090;
+    margin-right: 10px;
+    margin-top: 7px;
+    border-radius: 15px;
+    padding: 2px 15px 0px 15px;
+    line-height: 19px;
+    font-family: 'Dubai-Medium', sans-serif !important;
+}
+.breadcrumb li+li:before {
+  padding: 8px;
+  color: #fff;
+  content: none;
+}
+.breadcrumb li a {
+  color: #0275d8;
+  text-decoration: none;
+}
+.breadcrumb li a:hover {
+  color: #01447e;
+  text-decoration: underline;
+}
+
+.section2_head_view h2{
+  font-family: sans-serif;
+  font-size: 5vh;
+  font-family: 'Dubai-Light', sans-serif !important;
+}
+
+#button-bar{
+  font-family: 'Dubai-Bold', sans-serif !important;
+  font-size: 30px;
+  padding-left: 10px;
+}
+
+.multidropdown_icon {
+    margin-left: 75%;
+}
+
+/* when Dropdown open border color change depends on requirement... */
+.filter_dropdown .btn-group.open .dropdown-toggle {
+    -webkit-box-shadow: inset 0 3px 5px rgba(0,0,0,.125);
+    box-shadow: inset 0 3px 5px rgba(0,0,0,.125);
+    border-color: #34b234;
+    background-color: #fff;
+}

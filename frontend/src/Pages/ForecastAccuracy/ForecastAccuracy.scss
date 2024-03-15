@@ -1,0 +1,93 @@
+@import "../../Constants/color.scss";
+/* -------------------------------- 
+
+Primary style
+
+-------------------------------- */
+.forecastAccuracy {
+  .top {
+    background-color: $gray;
+    padding: 5px;
+  }
+
+  .-m-5 {
+    margin-right: 7px;
+  }
+
+  .active-btn {
+    background-color: $darkOrange;
+  }
+
+  section h2 {
+    width: 100%;
+    color: $secondaryColor;
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: left;
+  }
+  .cd-breadcrumb li {
+    font-size: 14px;
+    margin: 0px 8px 0px 0px !important;
+  }
+  .row {
+    display: flex;
+    justify-content: space-between;
+  }
+  .toggle1 {
+    display: flex;
+    align-items: center;
+    .breadcrumb-disable {
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    h2 {
+      margin-left: 10px;
+      font-size: 17px !important;
+    }
+  }
+  .toggle2 {
+    float: right;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  /* -------------------------------- 
+    
+    Basic Style
+    
+    -------------------------------- */
+  .MuiToolbar-regular {
+    display: none;
+  }
+  .cd-breadcrumb {
+    display: flex;
+    margin: 0px;
+    margin-bottom: -3px;
+    margin-left: 5px;
+  }
+  .cd-breadcrumb:after,
+  .cd-multi-steps:after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+  .cd-breadcrumb li,
+  .cd-multi-steps li {
+    display: inline-block;
+    float: left;
+    margin: 0.5em 0;
+    cursor: pointer;
+    min-width: auto;
+    max-width: 110px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+}
+
+@media (max-height: 620px) {
+  .cd-breadcrumb li,
+  .cd-multi-steps li {
+    max-width: 110px !important;
+  }
+}
