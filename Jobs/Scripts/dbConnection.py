@@ -9,7 +9,7 @@ import pyodbc
 import sqlalchemy
 import urllib.request
 import time
-
+import os
 
 # =============================================================================
 # Connecting To Database
@@ -22,6 +22,23 @@ def cnxn(dbName):
                 "PWD=hemantcgupta")
     return pyodbc.connect(cnxn_str)
 
+
+# =============================================================================
+# Creating Database if not exist
+# =============================================================================
+def create_database(dbName):
+    cnxn_str = ("Driver=ODBC Driver 17 for SQL Server;"
+                "Server=DESKTOP-4ABRK6A\SQLEXPRESS;"
+                "Database=master;"
+                "UID=hemantcgupta;"
+                "PWD=hemantcgupta")
+    cnxn = pyodbc.connect(cnxn_str)
+    cursor = cnxn.cursor()
+    cnxn.autocommit = True
+    query = f"IF DB_ID('{dbName}') IS NULL CREATE DATABASE {dbName};"
+    cursor.execute(query)
+ 
+   
 
 # =============================================================================
 # Data Inserting into tables
@@ -43,8 +60,7 @@ def Data_Inserting_Into_DB(df, dbName, Table_Name, insertMethod):
         if len(df) <= 1000:
             chunksize = len(df)
         df.to_sql(Table_Name, engine, if_exists = insertMethod, index=False, chunksize = chunksize)
-        print(f"Data Insert Into DB successful In: {round(time.time()-start)} Sec")
-        return {Table_Name: 'successful'}
+        return {'dbName': dbName, Table_Name: 'Successful'}
     except Exception as e:
         print(f"Data Insert Into DB Unsuccessful In: {round(time.time()-start)} Sec")
-        return {Table_Name: e}
+        return {'dbName': dbName, Table_Name: e}

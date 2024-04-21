@@ -106,10 +106,10 @@ def buy_sell_probability_in_profit_and_loss(df):
     ProbabilityOfpriceBand = df['priceBand'].astype(int).value_counts()
     ProbabilityOfpriceBand = round((ProbabilityOfpriceBand/ProbabilityOfpriceBand.sum())*100, 2).to_dict() 
     buysellProbability = {
-        'BuyInProfit MP::HP::MP::HP': round((BuyInProfit/Total)*100, 2),
-        'SellInLoss MP::MP::LP::LP': round((SellInLoss/Total)*100, 2),
-        'BuyInLoss MP::HP::LP::HP': round((BuyInLoss/Total)*100, 2),
-        'SellInProfit MP::HP::LP::LP': round((SellInProfit/Total)*100, 2),
+        'BuyInProfit MP::HP::MP::HP': round((BuyInProfit/Total)*100, 2) if Total != 0 else 0,
+        'SellInLoss MP::MP::LP::LP': round((SellInLoss/Total)*100, 2) if Total != 0 else 0,
+        'BuyInLoss MP::HP::LP::HP': round((BuyInLoss/Total)*100, 2) if Total != 0 else 0,
+        'SellInProfit MP::HP::LP::LP': round((SellInProfit/Total)*100, 2) if Total != 0 else 0,
         'ProbabilityOfCloseTolerance': ProbabilityOfCloseTolerance,
         'ProbabilityOfProfitLoss': ProbabilityOfProfitLoss,
         'ProbabilityOfProfitTomorrow': ProbabilityOfProfitLossTomorrow.get('Profit'),
@@ -207,3 +207,20 @@ def fetching_all_stock_data_based_on_todays(symbol):
         print(symbol)
         return {}
 
+# symbol = 'BLS'+'.NS'
+# df, dfInterval = yfDownload(symbol, '1y', '5m')
+# if len(df) > 50 and len(dfInterval) > 50:
+#     df, dfInterval = yfDownloadingBegingProcess(df, dfInterval)
+#     df = formulaPercentage(df)
+#     df = MovingAverage44(df)
+#     dfInterval = MovingAverage44(dfInterval)
+#     dfInterval = find_support_resistance(dfInterval)
+#     dfCandle = pd.merge(pd.merge(dfInterval.groupby('Date') ['CandleP/N_OpenDay'].value_counts().unstack(fill_value=0).reset_index().rename(columns={-1: 'nCandleBelowOpen', 1: 'pCandleAboveOpen'}), dfInterval.groupby('Date') ['CandleP/N'].value_counts().unstack(fill_value=0).reset_index().rename(columns={-1: 'nCandle', 1: 'pCandle'}), how='left', on='Date'), dfInterval.groupby('Date') ['44TF'].value_counts().unstack(fill_value=0).reset_index().rename(columns={1: 'Hits44MA'})[['Date', 'Hits44MA']], how='left', on='Date')
+#     dfEtEx = pd.merge(EntryExitMinToMax(dfInterval), EntryExitMaxToMin(dfInterval), how='left', on='Date')
+#     dfItCd = pd.merge(dfCandle, dfEtEx,how='left', on='Date')
+#     df = pd.merge(df, dfItCd, how='left', on='Date')
+#     saveFilesInMachine(symbol, df, 'Processing')
+#     dfInterval['Datetime'] = dfInterval['Datetime'].dt.tz_localize(None)
+#     saveFilesInMachine(symbol, dfInterval, 'intervalData')
+#     df = df.dropna().reset_index(drop=True)
+#     dct = ProbabilityDataProcessing(df, dfInterval, symbol)
