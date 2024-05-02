@@ -5,6 +5,7 @@ from ScheduledJobs.mkdayprobability import *
 from ScheduledJobs.mkdayma import *
 from ScheduledJobs.mkintervalanalyzer import *
 from ScheduledJobs.mkdayprediction import *
+from ScheduledJobs.JobTomorrowAnalyzer import *
 
 if __name__ == "__main__":
     resultJob1 = JobStockDataDownloader()
@@ -14,6 +15,7 @@ if __name__ == "__main__":
     resultJob5 = JobmkDayMa()
     resultJob6 = JobmkIntervalAnalyzer()
     resultJob7 = JobmkDayPrediction()
+    resultJob8 = JobTomorrowAnalyzer()
     
 # use mkanalyzer;
 # with main as (

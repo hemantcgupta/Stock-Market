@@ -99,7 +99,7 @@ class StockDataDownloader:
         return df
     
     def update_table(self, result, insertMethod):
-        result = [Data_Inserting_Into_DB(subdct.get('Dataframe'), dbName, subdct.get('tableName'), insertMethod) if not subdct.get('Dataframe').empty else {'dbName': dbName, subdct.get('tableName'): 'Unsuccessful Empty DataFrame'} for dct in tqdm(result, desc='Update Table') for dbName, subdct in dct.items()]
+        result = [Data_Inserting_Into_DB(subdct.get('Dataframe'), dbName, subdct.get('tableName'), insertMethod) if not subdct.get('Dataframe').empty else {'dbName': dbName, subdct.get('tableName'): 'Unsuccessful Empty DataFrame'} for dct in tqdm(result, desc='Stock Data Downloader Update Table') for dbName, subdct in dct.items()]
         return result
 
 def JobStockDataDownloader():
