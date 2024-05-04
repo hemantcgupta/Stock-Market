@@ -32,7 +32,7 @@ class mkMonthAnalyzer:
         
     def mkMonth_Data_Process(self, stockSymbols):
         with Pool(processes=self.cpu_count) as pool:
-            result = list(tqdm(pool.imap(self.fetch_db_data, stockSymbols), total=len(stockSymbols)))
+            result = list(tqdm(pool.imap(self.fetch_db_data, stockSymbols), total=len(stockSymbols), desc='Updating mkMonthFeature, mkMonthSummary, and mkMonthSeasonality'))
         result_feature = self.update_table(result, self.db_name_analyzer, self.table_name_mfeature, 'replace')
         result_summary = self.update_table(result, self.db_name_analyzer, self.table_name_msummary, 'replace')
         result_seasonality = self.update_table(result, self.db_name_analyzer, self.table_name_mseasonality, 'replace')

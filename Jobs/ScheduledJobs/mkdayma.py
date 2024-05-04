@@ -38,12 +38,14 @@ class mkDayMa:
                 '''
             df = pd.read_sql(query, cnxn(self.db_name_analyzer))
             df['MaxDatetime'] = np.datetime64('NaT')
-        df['MinDatetime'] = df['MaxDatetime'] - pd.DateOffset(days=44)
+        df['MinDatetime'] = df['MaxDatetime'] - pd.DateOffset(days=88)
         return df.to_dict('records')
 
     def update_mkday_ma(self, stock_symbols_dict):
+        resultD = self.Delete_max_date(self.db_name_analyzer, stock_symbols_dict)
         ticker_name = stock_symbols_dict.get('tickerName')
         MinDatetime = stock_symbols_dict.get('MinDatetime')
+        MaxDatetime = stock_symbols_dict.get('MaxDatetime')
         query = f'''
                 SELECT Datetime, tickerName, High, Low, [Close] FROM {self.table_name_dfeature} 
                 WHERE tickerName='{ticker_name}'
@@ -51,21 +53,39 @@ class mkDayMa:
         if not pd.isna(MinDatetime):
             query += f"and Datetime >= '{MinDatetime}'"
         df = pd.read_sql(query, cnxn(self.db_name_analyzer))
-        if pd.isna(stock_symbols_dict.get('MaxDatetime')) or df['Datetime'].max() > stock_symbols_dict.get('MaxDatetime'):
-            df = self.MovingAverage44(df)
+        if pd.isna(MaxDatetime) or df['Datetime'].max() >= MaxDatetime:
+            df = self.MovingAverage44(df, MaxDatetime)
             result = Data_Inserting_Into_DB(df, self.db_name_analyzer, self.table_name_dma, 'append')
             return {**result, 'Message': 'New Data Added', 'tickerName': ticker_name}
         return {'Message': 'Already Upto-Date', 'tickerName': ticker_name}
 
+    def Delete_max_date(self, dbName, stock_symbols_dict):
+        try:
+            ticker_name = stock_symbols_dict.get("tickerName")
+            max_date = stock_symbols_dict.get("MaxDatetime")
+            conn = cnxn(dbName)
+            cursor = conn.cursor()
+            delete_query = f"DELETE FROM {self.table_name_dma} WHERE tickerName = '{ticker_name}' and Datetime = '{max_date}';"
+            cursor.execute(delete_query)
+            conn.commit()
+            return {**stock_symbols_dict, 'status': 'success'}
+        except:
+            return {**stock_symbols_dict, 'status': 'error'}
+        
     @staticmethod
-    def MovingAverage44(df):
-        df['44MA'] = df['Close'].rolling(window=44).mean().fillna(0)
+    def MovingAverage44(df, MaxDatetime):
+        df['44MA'] = df['Close'].rolling(window=44).mean().fillna(0).round(2)
         df['44TF'] = df.apply(lambda row: 1 if row['44MA'] <= row['High'] and row['44MA'] >= row['Low'] else 0, axis=1)
         df = df[['Datetime', 'tickerName', '44MA', '44TF']]
+        if not pd.isna(MaxDatetime):
+            df = df[df['Datetime'] >= MaxDatetime].reset_index(drop=True)
         return df
 
     def update_all_mkday_ma(self):
         stock_symbols = self.fetch_max_dates()
+        # df = pd.DataFrame(stock_symbols)
+        # stock_symbols = df[df['tickerName'] == 'BLS'].to_dict('records')
+        # print(stock_symbols)
         with Pool(processes=self.cpu_count) as pool:
             results = list(tqdm(pool.imap(self.update_mkday_ma, stock_symbols), total=len(stock_symbols), desc='Update Table mkDayMA'))
         return results

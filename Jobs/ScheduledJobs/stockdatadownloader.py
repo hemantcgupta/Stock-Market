@@ -43,10 +43,12 @@ class StockDataDownloader:
         query_day = f'select max(Datetime) from [{ticker_name}]'
         query_interval = f'select max(Datetime) from [{ticker_name}]'
         try:
-            start_date = (pd.read_sql(query_day, cnxn(self.db_name_day)).iloc[0].iloc[0] + timedelta(days=1)).strftime('%Y-%m-%d')
+            start_date = (pd.read_sql(query_day, cnxn(self.db_name_day)).iloc[0].iloc[0]).strftime('%Y-%m-%d')            
         except:
             start_date = self.intial_start_date
-        start_date_interval = (pd.read_sql(query_interval, cnxn(self.db_name_interval)).iloc[0].iloc[0] + timedelta(days=1)).strftime('%Y-%m-%d')
+        start_date_interval = (pd.read_sql(query_interval, cnxn(self.db_name_interval)).iloc[0].iloc[0]).strftime('%Y-%m-%d')
+        resultD1 = self.Delete_max_date(self.db_name_day, ticker_name, start_date)
+        resultD2 = self.Delete_max_date(self.db_name_interval, ticker_name, start_date_interval)
         period = self.period_decision_maker(start_date, start_date_interval)
         df, df_interval = self.yf_download(ticker_name, period)
         df = df[df['Datetime'] >= period['start']].reset_index(drop=True)
@@ -62,6 +64,14 @@ class StockDataDownloader:
             }
         return result
     
+    def Delete_max_date(self, dbName, ticker_name, max_date):
+        conn = cnxn(dbName)
+        cursor = conn.cursor()
+        delete_query = f"DELETE FROM [{ticker_name}] WHERE Datetime = '{max_date}';"
+        cursor.execute(delete_query)
+        conn.commit()
+        return f'Delet Max Date From {dbName}.{ticker_name}'
+        
     def period_decision_maker(self, start_date, start_date_interval):
         period = {
             'start': start_date,
@@ -83,8 +93,8 @@ class StockDataDownloader:
     def yf_download(self, ticker_name, period):
         yf_ticker = yf.Ticker(f'{ticker_name}.NS')
         df = yf_ticker.history(start=period['start'], end=period['end']).dropna().reset_index()
-        df_interval = yf_ticker.history(start=period['startInterval'], end=period['endInterval'], interval='5m').dropna().reset_index()
         df = self.yf_download_cleaning(df)
+        df_interval = yf_ticker.history(start=period['startInterval'], end=period['endInterval'], interval='5m').dropna().reset_index()
         df_interval = self.yf_download_cleaning(df_interval)
         return df, df_interval
     

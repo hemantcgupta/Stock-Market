@@ -82,10 +82,11 @@ def fetch_db_all_feature(resultSR):
 # =============================================================================
 def JobTomorrowAnalyzer():
     df = JobTomorrowAnalyzerMain()
-    filename = fr"./Data/Probability/{df['Datetime'].astype(str).iloc[0]}.xlsx"
+    filename = './Sample Data/Tomorrow Market Prediction.xlsx'
     df.to_excel(filename, index=False)
     Uplode_Latest_Insights(filename)
     return df
 
 if __name__ == "__main__":
     df = JobTomorrowAnalyzer()
+

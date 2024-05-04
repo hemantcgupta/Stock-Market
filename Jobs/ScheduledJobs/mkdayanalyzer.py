@@ -32,7 +32,7 @@ class mkDayAnalyzer:
     
     def mkDay_Data_Process(self, stockSymbols):
         with Pool(processes=self.cpu_count) as pool:
-            result = list(tqdm(pool.imap(self.fetch_db_data, stockSymbols), total=len(stockSymbols)))
+            result = list(tqdm(pool.imap(self.fetch_db_data, stockSymbols), total=len(stockSymbols), desc='Updating mkDayFeature and mkDaySeasonality'))
         result_feature = self.update_table(result, self.db_name_analyzer, self.table_name_dfeature, 'replace')
         result_seasonality = self.update_table(result, self.db_name_analyzer, self.table_name_dseasonality, 'replace')
         return {'feature': result_feature, 'seasonality': result_seasonality}

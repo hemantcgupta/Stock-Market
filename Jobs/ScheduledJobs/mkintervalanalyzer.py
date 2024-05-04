@@ -49,7 +49,7 @@ def mkIntervalAnalyzerMain():
 # =============================================================================
 def mkInterval_Data_Process(stockSymbols):
     with Pool(processes=VAR.cpu_count) as pool:
-        result = list(tqdm(pool.imap(fetch_db_data, stockSymbols), total=len(stockSymbols)))    
+        result = list(tqdm(pool.imap(fetch_db_data, stockSymbols), total=len(stockSymbols), desc='Updating mkintervalanalyzer and mkIntervalFeature'))    
     result_day, result_interval = update_table(result, 'replace')
     return result_day, result_interval
 

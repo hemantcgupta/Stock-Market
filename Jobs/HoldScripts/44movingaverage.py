@@ -30,7 +30,7 @@ def plot_stock_with_moving_average(symbol, start_date, end_date, window_size=44)
     plt.show()
 
 # Example usage
-symbol = 'RVNL.NS'  # Replace with the desired stock symbol
+symbol = 'BLS.NS'  # Replace with the desired stock symbol
 start_date = '2023-01-01'
 end_date = '2024-01-01'
 plot_stock_with_moving_average(symbol, start_date, end_date)

@@ -20,7 +20,6 @@ from tqdm import tqdm
 import warnings
 warnings.filterwarnings('ignore')
 from Scripts.dbConnection import Data_Inserting_Into_DB, create_database, cnxn
-from Scripts.dataprocess import NextDayPrediction
 
 # =============================================================================
 # Variables
@@ -57,15 +56,17 @@ def fetch_max_dates():
         df = pd.read_sql(query, cnxn(VAR.db_name_analyzer))
         df['MaxDatetime'] = np.datetime64('NaT')
     df['MinDatetime'] = df['MaxDatetime'] - pd.DateOffset(months=1)
-    return df.to_dict('records')    
+    return df.to_dict('records')   
 
 # =============================================================================
 # Fetch New data and Process to Calculate TM Predition
 # Update mkDay Prediction Table 
 # =============================================================================
 def update_mkday_prediction(stock_symbols_dict):
+    resultD = Delete_max_date(VAR.db_name_analyzer, stock_symbols_dict)
     ticker_name = stock_symbols_dict.get('tickerName')
     MinDatetime = stock_symbols_dict.get('MinDatetime')
+    MaxDatetime = stock_symbols_dict.get('MaxDatetime')
     query = f'''
             SELECT Interval.*, Day.[Open], Day.[Close], Day.maxHigh, Day.maxLow, Day.PvClose 
             FROM {VAR.table_name_ifeature} AS Interval
@@ -76,18 +77,31 @@ def update_mkday_prediction(stock_symbols_dict):
     if not pd.isna(MinDatetime):
         query += f"and Interval.Datetime >= '{MinDatetime}'"
     df = pd.read_sql(query, cnxn(VAR.db_name_analyzer))
-    if pd.isna(stock_symbols_dict.get('MaxDatetime')) or df['Datetime'].max() > stock_symbols_dict.get('MaxDatetime'):
+    if pd.isna(MaxDatetime) or df['Datetime'].max() >= MaxDatetime:
         df = mkday_prediction_data_process(ticker_name, stock_symbols_dict, df)
         result = Data_Inserting_Into_DB(df, VAR.db_name_analyzer, VAR.table_name_dprediction, 'append')
         return {**result, 'Message': 'New Data Added', 'tickerName': ticker_name}
     return {'Message': 'Already Upto-Date', 'tickerName': ticker_name}
 
+def Delete_max_date(dbName, stock_symbols_dict):
+    try:
+        ticker_name = stock_symbols_dict.get("tickerName")
+        max_date = stock_symbols_dict.get("MaxDatetime")
+        conn = cnxn(dbName)
+        cursor = conn.cursor()
+        delete_query = f"DELETE FROM {VAR.table_name_dprediction} WHERE tickerName = '{ticker_name}' and Datetime = '{max_date}';"
+        cursor.execute(delete_query)
+        conn.commit()
+        return {**stock_symbols_dict, 'status': 'success'}
+    except:
+        return {**stock_symbols_dict, 'status': 'error'}
 # =============================================================================
 # Multi Process Group The 1 month Prediction 
 # =============================================================================
 def mkday_prediction_data_process(ticker_name, stock_symbols_dict, df):
     df = df.sort_values(by='Datetime').reset_index(drop=True)
     df['MinDatetime'] = df['Datetime'] - pd.DateOffset(months=1)
+    df.set_index('Datetime', inplace=True)
     multi_data_processor = MultiDataProcessor(stock_symbols_dict, df)
     dct_data = multi_data_processor.multiprocessing()
     df = pd.DataFrame(dct_data)
@@ -105,20 +119,48 @@ class MultiDataProcessor:
         self.df = df
         
     def multiprocessing(self):
-        grouped_df = self.df.groupby('Datetime')
-        with Pool(processes=VAR.cpu_count) as pool:
-            result = list(pool.imap(self.prediction_process, grouped_df))
+        MaxDatetime = self.stock_symbols_dict.get('MaxDatetime')
+        DateRange = [(current_date, past_date) for current_date, past_date in zip(self.df.index, self.df['MinDatetime']) if pd.isna(MaxDatetime) or current_date >= MaxDatetime]
+        result = [self.prediction_process(arg) for arg in DateRange]
         return result
 
     def prediction_process(self, arg):
-        current_date, group = arg
-        past_date = group['MinDatetime'].iloc[0]
-        if pd.isna(self.stock_symbols_dict.get('MaxDatetime')) or current_date > self.stock_symbols_dict.get('MaxDatetime'):
-            subset_df = self.df[(self.df['Datetime'] >= past_date) & (self.df['Datetime'] <= current_date)]
+        try:
+            current_date, past_date = arg
+            subset_df = self.df.iloc[(self.df.index >= past_date) & (self.df.index <= current_date)]
             dct = NextDayPrediction(subset_df)
             dct['Datetime'] = current_date
             return dct
-        return {}
+        except:
+            return {}
+
+def NextDayPrediction(df):
+    predTmOpen = round((df['Open']/df['PvClose']-1).mean()*df['Close'].iloc[-1]+df['Close'].iloc[-1], 2)
+    predTmEntry1 = round((df['Entry1']/df['Open']-1).mean()*predTmOpen+predTmOpen, 2)
+    predTmEntry2 = round((df['Entry2']/df['Open']-1).mean()*predTmOpen+predTmOpen, 2)
+    predTmExit1 = round((df['Exit1']/df['Open']-1).mean()*predTmOpen+predTmOpen, 2)
+    predTmExit2 = round((df['Exit2']/df['Open']-1).mean()*predTmOpen+predTmOpen, 2)
+    predTmClose = round(predTmOpen/(1-(1-df['Open']/df['Close']).mean()), 2)
+    predTmMaxhigh = round((df['maxHigh'].mean()/100)*predTmOpen+predTmOpen, 2)
+    predTmMaxlow = round((df['maxLow'].mean()/100)*predTmOpen+predTmOpen, 2)
+    EtEx1Profit = round((1-predTmEntry1/predTmExit1)*100, 2)
+    EtEx2Profit = round((1-predTmEntry2/predTmExit2)*100, 2)
+    predPL = round((1-predTmOpen/predTmClose)*100, 2)
+    predDct = {
+        'predTmOpen': predTmOpen,
+        'predTmEntry1': predTmEntry1,
+        'predTmExit1': predTmExit1,
+        'predTmEntry2': predTmEntry2,
+        'predTmExit2': predTmExit2,
+        'predTmClose': predTmClose,
+        'predTmMaxhigh': predTmMaxhigh,
+        'predTmMaxlow': predTmMaxlow,
+        'EtEx1Profit': EtEx1Profit,
+        'EtEx2Profit': EtEx2Profit,
+        'predTmP/L': predPL
+        }
+    return predDct
+        
 
 # =============================================================================
 # Job Function
@@ -126,7 +168,8 @@ class MultiDataProcessor:
 def JobmkDayPrediction():
     validation()
     stock_symbols = fetch_max_dates()
-    result = [update_mkday_prediction(stock_symbol) for stock_symbol in tqdm(stock_symbols, desc=f'Update Table {VAR.table_name_dprediction}')]
+    with Pool(processes=int(cpu_count() * 0.8)) as pool:
+        result = list(tqdm(pool.imap(update_mkday_prediction, stock_symbols), total=len(stock_symbols), desc=f'Update Table {VAR.table_name_dprediction}'))
     return result
     
 if __name__ == "__main__":
