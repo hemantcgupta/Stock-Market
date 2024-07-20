@@ -99,10 +99,10 @@ class StockDataDownloader:
         return df, df_interval
     
     def yf_download_cleaning(self, df):
-        if df.empty:
-            return df
         if 'Date' in df.columns:
             df.rename(columns={'Date': 'Datetime'}, inplace=True)
+        if df.empty:
+            return df
         df = df[['Datetime', 'Open', 'High', 'Low', 'Close', 'Volume']]
         df[['Open', 'High', 'Low', 'Close']] = df[['Open', 'High', 'Low', 'Close']].round(2)
         df['Datetime'] = df['Datetime'].dt.tz_localize(None)
