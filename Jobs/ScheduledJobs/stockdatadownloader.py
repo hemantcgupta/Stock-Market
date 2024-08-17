@@ -19,6 +19,7 @@ class StockDataDownloader:
     def __init__(self):
         self.cpu_count = int(cpu_count() * 0.8)
         self.current_date = datetime.now()
+        self.db_name_master = 'master'
         self.db_name_day = 'mkdaymaster'
         self.db_name_interval = 'mkintervalmaster'
         self.intial_start_date = '2017-10-01'
@@ -38,8 +39,8 @@ class StockDataDownloader:
             result = list(tqdm(pool.imap(self.stock_data_download, stock_symbols), total=len(stock_symbols), desc='Stock Data Downloader'))
         result = self.update_table(result, 'append')
         return result
-            
-    def stock_data_download(self, ticker_name):
+    
+    def stock_data_download(self, ticker_name): 
         query_day = f'select max(Datetime) from [{ticker_name}]'
         query_interval = f'select max(Datetime) from [{ticker_name}]'
         try:
@@ -47,8 +48,7 @@ class StockDataDownloader:
         except:
             start_date = self.intial_start_date
         start_date_interval = (pd.read_sql(query_interval, cnxn(self.db_name_interval)).iloc[0].iloc[0]).strftime('%Y-%m-%d')
-        resultD1 = self.Delete_max_date(self.db_name_day, ticker_name, start_date)
-        resultD2 = self.Delete_max_date(self.db_name_interval, ticker_name, start_date_interval)
+        resultD1 = self.Delete_max_date(self.db_name_master, ticker_name, start_date, start_date_interval)
         period = self.period_decision_maker(start_date, start_date_interval)
         df, df_interval = self.yf_download(ticker_name, period)
         df = df[df['Datetime'] >= period['start']].reset_index(drop=True)
@@ -64,10 +64,12 @@ class StockDataDownloader:
             }
         return result
     
-    def Delete_max_date(self, dbName, ticker_name, max_date):
+    def Delete_max_date(self, dbName, ticker_name, max_date_day, max_date_interval):
         conn = cnxn(dbName)
         cursor = conn.cursor()
-        delete_query = f"DELETE FROM [{ticker_name}] WHERE Datetime = '{max_date}';"
+        delete_query = f"DELETE FROM {self.db_name_day}.dbo.[{ticker_name}] WHERE Datetime = '{max_date_day}';"
+        cursor.execute(delete_query)
+        delete_query = f"DELETE FROM {self.db_name_interval}.dbo.[{ticker_name}] WHERE Datetime >= '{max_date_interval}';"
         cursor.execute(delete_query)
         conn.commit()
         return f'Delet Max Date From {dbName}.{ticker_name}'

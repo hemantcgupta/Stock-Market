@@ -56,25 +56,28 @@ def fetch_max_dates():
 # Update mkDay Prediction Table 
 # =============================================================================
 def update_mkday_prediction(stock_symbols_dict):
-    resultD = Delete_max_date(VAR.db_name_analyzer, stock_symbols_dict)
-    ticker_name = stock_symbols_dict.get('tickerName')
-    MinDatetime = stock_symbols_dict.get('MinDatetime')
-    MaxDatetime = stock_symbols_dict.get('MaxDatetime')
-    query = f'''
-            SELECT Interval.*, Day.[Open], Day.[Close], Day.maxHigh, Day.maxLow, Day.PvClose 
-            FROM {VAR.table_name_ifeature} AS Interval
-            LEFT JOIN {VAR.table_name_dfeature} AS Day 
-            ON Interval.Datetime = Day.Datetime and Interval.tickerName = Day.tickerName
-            WHERE Interval.tickerName = '{ticker_name}'
-            '''
-    if not pd.isna(MinDatetime):
-        query += f"and Interval.Datetime >= '{MinDatetime}'"
-    df = pd.read_sql(query, cnxn(VAR.db_name_analyzer))
-    if pd.isna(MaxDatetime) or df['Datetime'].max() >= MaxDatetime:
-        df = mkday_prediction_data_process(ticker_name, stock_symbols_dict, df)
-        result = Data_Inserting_Into_DB(df, VAR.db_name_analyzer, VAR.table_name_dprediction, 'append')
-        return {**result, 'Message': 'New Data Added', 'tickerName': ticker_name}
-    return {'Message': 'Already Upto-Date', 'tickerName': ticker_name}
+    try:
+        resultD = Delete_max_date(VAR.db_name_analyzer, stock_symbols_dict)
+        ticker_name = stock_symbols_dict.get('tickerName')
+        MinDatetime = stock_symbols_dict.get('MinDatetime')
+        MaxDatetime = stock_symbols_dict.get('MaxDatetime')
+        query = f'''
+                SELECT Interval.*, Day.[Open], Day.[Close], Day.maxHigh, Day.maxLow, Day.PvClose 
+                FROM {VAR.table_name_ifeature} AS Interval
+                LEFT JOIN {VAR.table_name_dfeature} AS Day 
+                ON Interval.Datetime = Day.Datetime and Interval.tickerName = Day.tickerName
+                WHERE Interval.tickerName = '{ticker_name}'
+                '''
+        if not pd.isna(MinDatetime):
+            query += f"and Interval.Datetime >= '{MinDatetime}'"
+        df = pd.read_sql(query, cnxn(VAR.db_name_analyzer))
+        if pd.isna(MaxDatetime) or df['Datetime'].max() >= MaxDatetime:
+            df = mkday_prediction_data_process(ticker_name, stock_symbols_dict, df)
+            result = Data_Inserting_Into_DB(df, VAR.db_name_analyzer, VAR.table_name_dprediction, 'append')
+            return {**result, 'Message': 'New Data Added', 'tickerName': ticker_name}
+        return {'Message': 'Already Upto-Date', 'tickerName': ticker_name}
+    except Exception as e:
+        return {'Message': e, 'tickerName': ticker_name}
 
 def Delete_max_date(dbName, stock_symbols_dict):
     try:

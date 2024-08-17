@@ -8,6 +8,7 @@ Created on Mon Apr  1 01:13:15 2024
 
 import pandas as pd
 from tqdm import tqdm
+import time
 from multiprocessing import Pool, cpu_count
 import warnings
 warnings.filterwarnings('ignore')
@@ -50,25 +51,44 @@ def mkIntervalAnalyzerMain():
 def mkInterval_Data_Process(stockSymbols):
     with Pool(processes=VAR.cpu_count) as pool:
         result = list(tqdm(pool.imap(fetch_db_data, stockSymbols), total=len(stockSymbols), desc='Updating mkintervalanalyzer and mkIntervalFeature'))    
-    result_day, result_interval = update_table(result, 'replace')
+    result_day, result_interval = update_table(result, 'append')
     return result_day, result_interval
 
 # =============================================================================
 # Fetch each ticker from both master databse 'daymaster' and 'intervalmaster'
 # Process and Finding all features from interval data 
 # =============================================================================
-def fetch_db_data(tickerName):
+def fetch_db_data(tickerName): 
+    try:
+        latest_date_query = f"SELECT MAX(Datetime) FROM {VAR.db_name_ianalyzer}.dbo.[{tickerName}]"
+        latest_date = pd.read_sql(latest_date_query, cnxn(VAR.db_name_ianalyzer)).iloc[0, 0].normalize()
+        if pd.notnull(latest_date):
+            filterDate = latest_date - pd.DateOffset(days=10)
+        resultD = Delete_max_date(VAR.db_name_master, tickerName, latest_date)
+    except:     
+        filterDate = pd.Timestamp('2023-12-01')
+        latest_date = filterDate
     query = f'''
             SELECT * FROM {VAR.db_name_interval}.dbo.[{tickerName}] AS interval
-            LEFT JOIN ( SELECT [Datetime] AS Date, [Open] AS OpenDay FROM {VAR.db_name_day}.dbo.[{tickerName}]) AS day
+            LEFT JOIN (SELECT [Datetime] AS Date, [Open] AS OpenDay FROM {VAR.db_name_day}.dbo.[{tickerName}]) AS day
             ON CONVERT(date, interval.Datetime) = day.Date
+            WHERE interval.Datetime >= '{filterDate}'
             ORDER BY Datetime      
             '''
     df = pd.read_sql(query, cnxn(VAR.db_name_master))
+    df = MovingAverage44(df)  
+    df = df[df['Datetime'] > latest_date].reset_index(drop=True)
     df = yfDownloadProcessingInterval(df)
-    df = MovingAverage44(df)
     df = find_support_resistance(df)
-    dfCandle = pd.merge(pd.merge(df.groupby('Date') ['CandleP/N_OpenDay'].value_counts().unstack(fill_value=0).reset_index().rename(columns={-1: 'nCandleBelowOpen', 1: 'pCandleAboveOpen'}), df.groupby('Date') ['CandleP/N'].value_counts().unstack(fill_value=0).reset_index().rename(columns={-1: 'nCandle', 1: 'pCandle'}), how='left', on='Date'), df.groupby('Date') ['44TF'].value_counts().unstack(fill_value=0).reset_index().rename(columns={1: 'Hits44MA'})[['Date', 'Hits44MA']], how='left', on='Date')
+    dfCandle = pd.merge(
+        pd.merge(
+            df.groupby('Date')['CandleP/N_OpenDay'].value_counts().unstack(fill_value=0).reset_index().rename(columns={-1: 'nCandleBelowOpen', 1: 'pCandleAboveOpen'}).reindex(columns=['Date', 'nCandleBelowOpen', 'pCandleAboveOpen'], fill_value=0),
+            df.groupby('Date')['CandleP/N'].value_counts().unstack(fill_value=0).reset_index().rename(columns={-1: 'nCandle', 1: 'pCandle'}).reindex(columns=['Date', 'nCandle', 'pCandle'], fill_value=0),
+            how='left', on='Date'
+        ),
+        df.groupby('Date')['44TF'].value_counts().unstack(fill_value=0).reset_index().rename(columns={1: 'Hits44MA'}).reindex(columns=['Date', 'Hits44MA'], fill_value=0),
+        how='left', on='Date'
+    )
     dfEtEx = pd.merge(EntryExitMinToMax(df), EntryExitMaxToMin(df), how='left', on='Date')    
     dfItCd = pd.merge(dfCandle, dfEtEx,how='left', on='Date')
     df, dfItCd = data_cleanning(df, dfItCd, tickerName)
@@ -76,19 +96,37 @@ def fetch_db_data(tickerName):
     return result
 
 # =============================================================================
+# Delete last record
+# =============================================================================
+def Delete_max_date(dbName, tickerName, max_date):
+    try:
+        conn = cnxn(dbName)
+        cursor = conn.cursor()
+        delete_query = f"DELETE FROM {VAR.db_name_ianalyzer}.dbo.[{tickerName}] WHERE Datetime >= '{max_date}';"
+        cursor.execute(delete_query)
+        delete_query = f"DELETE FROM {VAR.db_name_analyzer}.dbo.[{VAR.table_name_ifeature}] WHERE tickerName = '{tickerName}' and Datetime >= '{max_date}';"
+        cursor.execute(delete_query)
+        conn.commit()
+        return {'status': 'success'}
+    except:
+        return {'status': 'error'}
+    
+# =============================================================================
 # Process 1: Finding Postive and Negative Candle Patterns
 # =============================================================================
 def yfDownloadProcessingInterval(df):
+    df['Date'] = df['Date'].fillna(df['Datetime'].dt.normalize())
+    df['OpenDay'] = df['OpenDay'].fillna(df['Open'])
     df['CandleP/N_OpenDay'] = df.apply(lambda row: 1 if row['OpenDay'] <= row['Open'] else -1, axis=1)
     df['CandleP/N'] = df.apply(lambda row: 1 if row['Open'] <= row['Close'] else -1, axis=1)
-    df = df[['Date', 'Datetime', 'Open', 'High', 'Low', 'Close', 'OpenDay', 'CandleP/N_OpenDay', 'CandleP/N']]
+    df = df[['Date', 'Datetime', 'Open', 'High', 'Low', 'Close', 'OpenDay', 'CandleP/N_OpenDay', 'CandleP/N', '44MA', '44TF']]
     return df
 
 # =============================================================================
 # Process 2: Finding Moving Average 44
 # =============================================================================
 def MovingAverage44(df):
-    df['44MA'] = df['Close'].rolling(window=44).mean().fillna(0)
+    df['44MA'] = df['Close'].rolling(window=44).mean().fillna(0).round(2)
     df['44TF'] = df.apply(lambda row: 1 if row['44MA'] <= row['High'] and row['44MA'] >= row['Low'] else 0, axis=1)
     return df
 
@@ -110,9 +148,10 @@ def find_support_resistance(df, window_size=20):
             supports.append({'Datetime': data['Datetime'].iloc[i], 'Support': data['Low'].iloc[i]})
         if data['High'].iloc[i] > avg_high and data['High'].iloc[i] == max_val:
             resistances.append({'Datetime': data['Datetime'].iloc[i], 'Resistance': data['High'].iloc[i]})
-    dfS = pd.DataFrame(supports)
-    dfR = pd.DataFrame(resistances)
-    dfSR = pd.merge(df, dfS, how='left', on='Datetime').merge(dfR, how='left', on='Datetime')
+    dfS = pd.DataFrame(supports).reindex(columns=['Datetime', 'Support'], fill_value=0)
+    dfR = pd.DataFrame(resistances).reindex(columns=['Datetime', 'Resistance'], fill_value=0)
+    dfSR = pd.merge(df, dfS, how='left', on='Datetime')
+    dfSR = dfSR.merge(dfR, how='left', on='Datetime')
     return dfSR
 
 # =============================================================================
