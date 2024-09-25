@@ -13,6 +13,7 @@ from multiprocessing import Pool, cpu_count
 import warnings
 warnings.filterwarnings('ignore')
 from Scripts.dbConnection import Data_Inserting_Into_DB, create_database, cnxn
+from decorators.retry import retry
 
 # =============================================================================
 # Variables
@@ -58,10 +59,15 @@ def mkInterval_Data_Process(stockSymbols):
 # Fetch each ticker from both master databse 'daymaster' and 'intervalmaster'
 # Process and Finding all features from interval data 
 # =============================================================================
+@retry(retries=3, delay=1)
 def fetch_db_data(tickerName): 
     try:
         latest_date_query = f"SELECT MAX(Datetime) FROM {VAR.db_name_ianalyzer}.dbo.[{tickerName}]"
         latest_date = pd.read_sql(latest_date_query, cnxn(VAR.db_name_ianalyzer)).iloc[0, 0].normalize()
+        query = f"SELECT MAX(Datetime) FROM {VAR.table_name_ifeature}"
+        minLatestDate = pd.read_sql(query, cnxn(VAR.db_name_analyzer)).iloc[0, 0].normalize()
+        if minLatestDate < latest_date:
+            latest_date = minLatestDate
         if pd.notnull(latest_date):
             filterDate = latest_date - pd.DateOffset(days=10)
         resultD = Delete_max_date(VAR.db_name_master, tickerName, latest_date)
@@ -133,6 +139,7 @@ def MovingAverage44(df):
 # =============================================================================
 # Process 3: Finding Supoort and Resistance
 # =============================================================================
+@retry(retries=3, delay=1)
 def find_support_resistance(df, window_size=20):
     data = df[['Datetime', 'Low', 'High']]
     supports = []
@@ -149,7 +156,7 @@ def find_support_resistance(df, window_size=20):
         if data['High'].iloc[i] > avg_high and data['High'].iloc[i] == max_val:
             resistances.append({'Datetime': data['Datetime'].iloc[i], 'Resistance': data['High'].iloc[i]})
     dfS = pd.DataFrame(supports).reindex(columns=['Datetime', 'Support'], fill_value=0)
-    dfR = pd.DataFrame(resistances).reindex(columns=['Datetime', 'Resistance'], fill_value=0)
+    dfR = pd.DataFrame(resistances).reindex(columns=['Datetime', 'Resistance'], fill_value=0)  
     dfSR = pd.merge(df, dfS, how='left', on='Datetime')
     dfSR = dfSR.merge(dfR, how='left', on='Datetime')
     return dfSR
@@ -200,9 +207,9 @@ def data_cleanning(df, dfItCd, tickerName):
 # =============================================================================
 # update Database
 # =============================================================================
-def update_table(result, insertMethod):
-    result_interval = [Data_Inserting_Into_DB(dct.get(VAR.db_name_ianalyzer), VAR.db_name_ianalyzer, dct.get('tableName'), insertMethod) for dct in tqdm(result, desc=f'Update Table {VAR.db_name_ianalyzer}')]
-    dfItCd = pd.concat([dct.get(VAR.db_name_analyzer) for dct in result]).reset_index(drop=True)
+def update_table(result, insertMethod):  
+    result_interval = [Data_Inserting_Into_DB(dct.get(VAR.db_name_ianalyzer), VAR.db_name_ianalyzer, dct.get('tableName'), insertMethod) for dct in tqdm(result, desc=f'Update Table {VAR.db_name_ianalyzer}') if isinstance(dct, dict)]
+    dfItCd = pd.concat([dct.get(VAR.db_name_analyzer) for dct in result if isinstance(dct, dict)]).reset_index(drop=True)
     result_day = Data_Inserting_Into_DB(dfItCd, VAR.db_name_analyzer, VAR.table_name_ifeature, insertMethod)
     return result_day, result_interval
     

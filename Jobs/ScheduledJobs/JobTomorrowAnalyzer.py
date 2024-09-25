@@ -13,6 +13,7 @@ import warnings
 warnings.filterwarnings('ignore')
 from Scripts.dbConnection import Data_Inserting_Into_DB, create_database, cnxn
 from Scripts.TmInsights import Uplode_Latest_Insights 
+from Scripts.TmPrediction import StockAnalyzer, StockMarketPhasesAnalyzer, StockPredictorAnalyzer, TopPredictor
 
 # =============================================================================
 # Variables
@@ -75,15 +76,53 @@ def fetch_db_all_feature(resultSR):
     df = pd.read_sql(query, cnxn(VAR.db_name_analyzer))
     dfSR = pd.DataFrame(resultSR)
     df = pd.merge(df, dfSR, how='left', on='tickerName')
+    df[['SupportAbove', 'SupportBelow', 'ResistanceAbove', 'ResistanceBelow']] = df.apply(get_nearest_values, axis=1)
+    # df.drop(columns=['Support', 'Resistance'], inplace=True)
     return df
-    
+
+def get_nearest_values(row):
+    SupportAbove = sorted([item for item in row['Support'] if row['Close'] <= item])[:10]
+    SupportBelow = sorted([item for item in row['Support'] if row['Close'] > item])[-10:]
+    ResistanceAbove = sorted([item for item in row['Resistance'] if row['Close'] <= item])[:10]
+    ResistanceBelow = sorted([item for item in row['Resistance'] if row['Close'] > item])[-10:]
+    return pd.Series({
+        'SupportAbove': SupportAbove,
+        'SupportBelow': SupportBelow,
+        'ResistanceAbove': ResistanceAbove,
+        'ResistanceBelow': ResistanceBelow
+    })  
+  
 # =============================================================================
 # Job Function
 # =============================================================================
 def JobTomorrowAnalyzer():
+    # dfP1 = StockAnalyzer().analyze()
+    # dfP1 = StockMarketPhasesAnalyzer.getMarketPhases(dfP1)
+    # dfP2 = StockPredictorAnalyzer().analyze()
+    dfP3 = TopPredictor().analyze()
     df = JobTomorrowAnalyzerMain()
     filename = './Sample Data/Tomorrow Market Prediction.xlsx'
-    df.to_excel(filename, index=False)
+    with pd.ExcelWriter(filename, engine='xlsxwriter') as writer:
+        # # Write dfP1 to Excel and create a table
+        # dfP1.to_excel(writer, sheet_name='TOP 20 Old Logic', index=False)
+        # workbook = writer.book
+        # worksheet = writer.sheets['TOP 20 Old Logic']
+        # worksheet.add_table(0, 0, len(dfP1), len(dfP1.columns) - 1, {'columns': [{'header': col} for col in dfP1.columns]})
+    
+        # # Write dfP2 to Excel and create a table
+        # dfP2.to_excel(writer, sheet_name='TOP 20 New Logic', index=False)
+        # worksheet = writer.sheets['TOP 20 New Logic']
+        # worksheet.add_table(0, 0, len(dfP2), len(dfP2.columns) - 1, {'columns': [{'header': col} for col in dfP2.columns]})
+        
+        # Write dfP3 to Excel and create a table
+        dfP3.to_excel(writer, sheet_name='TOP 20', index=False)
+        worksheet = writer.sheets['TOP 20']
+        worksheet.add_table(0, 0, len(dfP3), len(dfP3.columns) - 1, {'columns': [{'header': col} for col in dfP3.columns]})
+    
+        # Write df to Excel and create a table
+        df.to_excel(writer, sheet_name='Market Analysis', index=False)
+        worksheet = writer.sheets['Market Analysis']
+        worksheet.add_table(0, 0, len(df), len(df.columns) - 1, {'columns': [{'header': col} for col in df.columns]})
     Uplode_Latest_Insights(filename)
     return df
 

@@ -30,6 +30,8 @@ class TmPrectionBagging:
         yM = dfM['TmPL']
         XM = XM.astype(float)
         
+        # X = self.df.iloc[1:].drop(columns=['Date', 'TmDate', 'TmPL'])
+        # y = self.df['TmPL'].iloc[1:]
         X = self.df.drop(columns=['Date', 'TmDate', 'TmPL'])
         y = self.df['TmPL']
         X = X.astype(float)

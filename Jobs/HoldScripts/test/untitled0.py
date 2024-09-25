@@ -53,14 +53,15 @@ def fetchData(inputDate):
     WHERE tas.Date = '{inputDate}' AND tas.TmPredPL = 1
     ),
     cte1 AS (
-        SELECT tickerName, COUNT(Datetime) AS counts 
-        FROM simulationPrediction
-        WHERE Entry2 <= predTmEntry2 
-          AND Exit2 >= predTmExit2
-          AND CAST(Datetime AS DATE) >= CAST(DATEADD(MONTH, -1, '{inputDate}') AS DATE)
-          AND CAST(Datetime AS DATE) <= '{inputDate}'
-        GROUP BY tickerName
-    )
+        SELECT sp.tickerName, COUNT(sp.Datetime) AS counts, '{inputDate}' as Datetime, ETEXProfit
+        FROM simulationPrediction AS sp
+        LEFT JOIN (SELECT tickerName, EtEx2Profit as ETEXProfit FROM simulationPrediction WHERE Datetime='{inputDate}') p ON p.tickerName=sp.tickerName
+        WHERE Entry2 <= predTmEntry2 AND Exit2 >= predTmExit2
+        --AND CAST(Datetime AS DATE) >= CAST(DATEADD(MONTH, -1, '{inputDate}') AS DATE)
+        AND CAST(Datetime AS DATE) >= CAST(DATEADD(MONTH, -1, (select max(Datetime) from simulationPrediction where CAST(Datetime AS DATE) < CAST('{inputDate}' AS DATE))) AS DATE)
+        AND CAST(Datetime AS DATE) < CAST('{inputDate}' AS DATE)
+        GROUP BY sp.tickerName, ETEXProfit
+            )
     SELECT  * FROM cte c1 
     LEFT JOIN cte1 c2 ON c1.tickerName = c2.tickerName
     ORDER BY c2.counts DESC, [AccuracyScore:Mode] DESC
@@ -79,35 +80,54 @@ df = pd.concat([fetchData(inputDate) for inputDate in dateList]).fillna(0)
 
 # Top 1
 def top1(df):
-    df_sorted = df.sort_values(by=['Date', 'counts', 'AccuracyScore:Mode'], ascending=[True, False, False])
+    df_sorted = df.sort_values(by=['Date', 'counts', 'AccuracyScore:Mode', 'ETEXProfit'], ascending=[True, False, False, False])
     df_sorted['RankValue'] = 0
     df_sorted.loc[df_sorted.groupby('Date').head(1).index, 'RankValue'] = 100
     df = df_sorted.groupby('Date').head(1).reset_index(drop=True)
-    df = df[df['gotEntry'] == 1].reset_index(drop=True)
     df['investedAmount'] = (df['RankValue']*10000/100).astype(int)
     df['profitAmount'] = (df['ProfitPercent']*df['investedAmount']/100).astype(int)
     df['dayName'] = pd.to_datetime(df['Date']).dt.day_name()
-    df = df.loc[:, ~df.columns.duplicated()].reindex(columns=['Date', 'dayName', 'tickerName', 'counts', 'RankValue', 'AccuracyScore:Mode', 'gotEntry', 'ActualEntry', 'PredEntry', 'ActulExit', 'PredExit', 'PredOpen', 'ActualOpen', 'ActualClose', 'AOpen/POpen-Diff', 'TmPL', 'TmPredPL', 'gotLoss', 'ProfitPercent', 'investedAmount', 'profitAmount'])
+    df = df.loc[:, ~df.columns.duplicated()].reindex(columns=['Date', 'dayName', 'tickerName', 'TmPL', 'TmPredPL', 'gotEntry', 'gotLoss', 'counts', 'AccuracyScore:Mode', 'ETEXProfit',
+     'ActualOpen', 'ActualClose', 'ActualEntry', 'ActulExit', 'PredEntry', 'PredExit', 'PredOpen', 'AOpen/POpen-Diff', 
+     'ProfitPercent', 'investedAmount', 'profitAmount', 'RankValue'])
+    print(df)
+    df = df[df['gotEntry'] == 1].reset_index(drop=True)
     print(df['profitAmount'].sum().round(2))
     print(df.groupby(pd.to_datetime(df['Date']).dt.month) ['profitAmount'].sum().reset_index())
     return df
 
 # Top 3
 def top3(df):
-   df_sorted = df.sort_values(by=['Date', 'counts', 'AccuracyScore:Mode'], ascending=[True, False, False])
+   df_sorted = df.sort_values(by=['Date', 'counts', 'AccuracyScore:Mode', 'ETEXProfit'], ascending=[True, False, False, False])
    df_sorted['RankValue'] = 0
    df_sorted.loc[df_sorted.groupby('Date').head(1).index, 'RankValue'] = 50
    df_sorted.loc[df_sorted.groupby('Date').head(2).tail(1).index, 'RankValue'] = 30
    df_sorted.loc[df_sorted.groupby('Date').head(3).tail(1).index, 'RankValue'] = 20
    df = df_sorted.groupby('Date').head(3).reset_index(drop=True)
-   df = df[df['gotEntry'] == 1].reset_index(drop=True)
    df['investedAmount'] = (df['RankValue']*10000/100).astype(int)
    df['profitAmount'] = (df['ProfitPercent']*df['investedAmount']/100).astype(int)
+   df['dayName'] = pd.to_datetime(df['Date']).dt.day_name()
+   df = df.loc[:, ~df.columns.duplicated()].reindex(columns=['Date', 'dayName', 'tickerName', 'TmPL', 'TmPredPL', 'gotEntry', 'gotLoss', 'counts', 'AccuracyScore:Mode', 'ETEXProfit',
+    'ActualOpen', 'ActualClose', 'ActualEntry', 'ActulExit', 'PredEntry', 'PredExit', 'PredOpen', 'AOpen/POpen-Diff', 
+    'ProfitPercent', 'investedAmount', 'profitAmount', 'RankValue'])
+   print(df)
+   df = df[df['gotEntry'] == 1].reset_index(drop=True)
    print(df['profitAmount'].sum().round(2))
    print(df.groupby(pd.to_datetime(df['Date']).dt.month) ['profitAmount'].sum().reset_index())
    return df
 
 df1 = top1(df)
 df3 = top3(df)
-print(df1['dayName'].value_counts())
+# print(df1['dayName'].value_counts())
+# print(df.tail(20))
 
+
+# query = 'select Date, tickerName, successCounts  from topAccurateStats'
+# dfM = pd.read_sql(query, cnxn(VAR.db_mkanalyzer))
+# dfC = df[['Date', 'tickerName', 'counts']]
+# dfC = dfC.loc[:, ~dfC.columns.duplicated()].reindex(columns=['Date', 'tickerName', 'counts'])
+# dfC = dfM.merge(dfC[['Date', 'tickerName', 'counts']], how='left', on=['Date', 'tickerName'])
+# dfC = dfC.dropna()
+# dfC[dfC['successCounts'] != dfC['counts']]
+# for d in dfC.groupby('Date'):
+#     print(d)

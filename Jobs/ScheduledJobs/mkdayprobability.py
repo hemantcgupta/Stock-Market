@@ -14,6 +14,8 @@ from tqdm import tqdm
 import warnings
 warnings.filterwarnings('ignore')
 from Scripts.dbConnection import Data_Inserting_Into_DB, create_database, cnxn
+from decorators.retry import retry
+
 
 class mkDayProbability:
     def __init__(self):
@@ -43,6 +45,7 @@ class mkDayProbability:
         df['MinDatetime'] = df['MaxDatetime'] - pd.DateOffset(months=1)
         return df.to_dict('records')
     
+    @retry(retries=3, delay=1)
     def update_mkday_probability(self, stock_symbols_dict):
         resultD = self.Delete_max_date(self.db_name_analyzer, stock_symbols_dict)
         ticker_name = stock_symbols_dict.get('tickerName')

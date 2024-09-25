@@ -62,5 +62,5 @@ def Data_Inserting_Into_DB(df, dbName, Table_Name, insertMethod):
         df.to_sql(Table_Name, engine, if_exists = insertMethod, index=False, chunksize = chunksize)
         return {'dbName': dbName, Table_Name: 'Successful'}
     except Exception as e:
-        print(f"Data Insert Into DB Unsuccessful In: {round(time.time()-start)} Sec")
+        print(f"Data Insert Into DB Unsuccessful In: {round(time.time()-start)} Sec; Error: {str(e)}")
         return {'dbName': dbName, Table_Name: e}

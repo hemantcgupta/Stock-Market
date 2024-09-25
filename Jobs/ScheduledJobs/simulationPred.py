@@ -13,7 +13,7 @@ from tqdm import tqdm
 import warnings
 warnings.filterwarnings('ignore')
 from Scripts.dbConnection import Data_Inserting_Into_DB, create_database, cnxn
-
+from decorators.retry import retry
 # =============================================================================
 # Variables
 # =============================================================================
@@ -34,27 +34,50 @@ def validation():
 # =============================================================================
 # Fetch Min Max Datetime From Old Data for Each Ticker Names
 # =============================================================================
+# def fetch_max_dates():
+#     try:
+#         query = f'''
+#                 SELECT tickerName, max(Datetime) as MaxDatetime FROM {VAR.table_name_simulationPrediction}
+#                 group by tickerName
+#                 '''
+#         df = pd.read_sql(query, cnxn(VAR.db_name_analyzer))
+#     except Exception as e:
+#         query = f'''
+#             SELECT tickerName, max(Datetime) as MaxDatetime FROM {VAR.table_name_dprediction} 
+#             group by tickerName
+#             '''
+#         df = pd.read_sql(query, cnxn(VAR.db_name_analyzer))
+#         df['MaxDatetime'] = np.datetime64('NaT')
+#     return df.to_dict('records')  
 def fetch_max_dates():
     try:
-        query = f'''
+        query_simulation = f'''
                 SELECT tickerName, max(Datetime) as MaxDatetime FROM {VAR.table_name_simulationPrediction}
-                group by tickerName
+                GROUP BY tickerName
                 '''
-        df = pd.read_sql(query, cnxn(VAR.db_name_analyzer))
+        df_simulation = pd.read_sql(query_simulation, cnxn(VAR.db_name_analyzer))
     except Exception as e:
-        query = f'''
+        df_simulation = pd.DataFrame(columns=['tickerName', 'MaxDatetime'])
+    try:
+        query_prediction = f'''
             SELECT tickerName, max(Datetime) as MaxDatetime FROM {VAR.table_name_dprediction} 
-            group by tickerName
+            GROUP BY tickerName
             '''
-        df = pd.read_sql(query, cnxn(VAR.db_name_analyzer))
-        df['MaxDatetime'] = np.datetime64('NaT')
-    return df.to_dict('records')   
+        df_prediction = pd.read_sql(query_prediction, cnxn(VAR.db_name_analyzer))
+    except Exception as e:
+        df_prediction = pd.DataFrame(columns=['tickerName', 'MaxDatetime'])
+        df_prediction['MaxDatetime'] = np.datetime64('NaT')
+    combined_df = pd.concat([df_simulation, df_prediction]).drop_duplicates(subset=['tickerName'], keep='first')
+    # combined_df.loc[combined_df['tickerName'].isin(['^NSEI', '^NSEBANK', '^BSESN', 'NIFTY_FIN_SERVICE']), 'MaxDatetime'] = np.datetime64('NaT')
+    return combined_df.to_dict('records')
+ 
 
 
 # =============================================================================
 # Fetch New data and Process For Simulation Prediction
 # Update simulationPrediction Table 
 # =============================================================================
+@retry(retries=3, delay=1)
 def update_simulationPrediction(stock_symbols_dict):
     ticker_name = stock_symbols_dict.get('tickerName')
     MaxDatetime = stock_symbols_dict.get('MaxDatetime')

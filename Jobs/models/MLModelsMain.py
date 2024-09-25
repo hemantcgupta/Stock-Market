@@ -91,7 +91,7 @@ class Main(DATA_GATHERING, TmPrectionSVC, TmPrectionTorch, TmPrectionBagging):
         'successCounts', 'TotalDays']
         self.dfScore = self.dfScore[seqColumns]
 
-def get_TmPrediction(kwargs):
+def get_TmPrediction(kwargs):    
     obj = Main(kwargs)
     df = obj.query()
     obj.data_process(df)
@@ -108,13 +108,14 @@ def get_TmPrediction(kwargs):
 
 def topAccurateTickers(top=None, filterDate=None): 
     query = f'''
-    SELECT tickerName, COUNT(Datetime) AS counts, '{filterDate}' as Datetime
-    FROM simulationPrediction
+    SELECT sp.tickerName, COUNT(sp.Datetime) AS counts, '{filterDate}' as Datetime, ETEXProfit
+    FROM simulationPrediction AS sp
+    LEFT JOIN (SELECT tickerName, EtEx2Profit as ETEXProfit FROM simulationPrediction WHERE Datetime='{filterDate}') p ON p.tickerName=sp.tickerName
     WHERE Entry2 <= predTmEntry2 AND Exit2 >= predTmExit2
     AND CAST(Datetime AS DATE) >= CAST(DATEADD(MONTH, -1, '{filterDate}') AS DATE)
-    AND CAST(Datetime AS DATE) <= CAST('{filterDate}' AS DATE)
-    GROUP BY tickerName
-    ORDER BY counts DESC
+    AND CAST(Datetime AS DATE) < CAST('{filterDate}' AS DATE)
+    GROUP BY sp.tickerName, ETEXProfit
+    ORDER BY counts DESC, ETEXProfit DESC
     '''
     df = pd.read_sql(query, cnxn(VAR.db_mkanalyzer)).iloc[:top]
     try:
@@ -144,7 +145,7 @@ def Delete_max_date(dbName, table_name, row):
         max_date = row['Date']
         conn = cnxn(dbName)
         cursor = conn.cursor()
-        delete_query = f"DELETE FROM {table_name} WHERE tickerName = '{ticker_name}' and Datetime = '{max_date}';"
+        delete_query = f"DELETE FROM {table_name} WHERE tickerName = '{ticker_name}' and Date = '{max_date}';"
         cursor.execute(delete_query)
         conn.commit()
         return True
@@ -153,14 +154,9 @@ def Delete_max_date(dbName, table_name, row):
     
    
 def jobPredictionModel():
-    # query = '''
-    # SELECT DISTINCT(Datetime) FROM simulationPrediction
-    # WHERE Datetime >= DATEADD(MONTH, -1, (SELECT MAX(Datetime) FROM simulationPrediction))
-    # ORDER BY Datetime ASC
-    # '''
     query = '''
     SELECT DISTINCT(Datetime) FROM simulationPrediction
-    WHERE Datetime >= DATEADD(MONTH, -1, (SELECT MAX(Datetime) FROM simulationPrediction))
+    WHERE Datetime >= DATEADD(MONTH, -3, (SELECT MAX(Datetime) FROM simulationPrediction))
     ORDER BY Datetime ASC
     '''
     dateList = pd.read_sql(query, cnxn(VAR.db_mkanalyzer))['Datetime'].dt.date.astype(str).tolist()
@@ -171,4 +167,5 @@ def jobPredictionModel():
     
 if __name__ == "__main__":
     result = jobPredictionModel()
+
 

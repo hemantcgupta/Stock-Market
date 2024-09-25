@@ -47,7 +47,10 @@ class StockDataDownloader:
             start_date = (pd.read_sql(query_day, cnxn(self.db_name_day)).iloc[0].iloc[0]).strftime('%Y-%m-%d')            
         except:
             start_date = self.intial_start_date
-        start_date_interval = (pd.read_sql(query_interval, cnxn(self.db_name_interval)).iloc[0].iloc[0]).strftime('%Y-%m-%d')
+        try: 
+            start_date_interval = (pd.read_sql(query_interval, cnxn(self.db_name_interval)).iloc[0].iloc[0]).strftime('%Y-%m-%d')
+        except:
+            start_date_interval  = self.intial_start_date
         resultD1 = self.Delete_max_date(self.db_name_master, ticker_name, start_date, start_date_interval)
         period = self.period_decision_maker(start_date, start_date_interval)
         df, df_interval = self.yf_download(ticker_name, period)
@@ -65,14 +68,17 @@ class StockDataDownloader:
         return result
     
     def Delete_max_date(self, dbName, ticker_name, max_date_day, max_date_interval):
-        conn = cnxn(dbName)
-        cursor = conn.cursor()
-        delete_query = f"DELETE FROM {self.db_name_day}.dbo.[{ticker_name}] WHERE Datetime = '{max_date_day}';"
-        cursor.execute(delete_query)
-        delete_query = f"DELETE FROM {self.db_name_interval}.dbo.[{ticker_name}] WHERE Datetime >= '{max_date_interval}';"
-        cursor.execute(delete_query)
-        conn.commit()
-        return f'Delet Max Date From {dbName}.{ticker_name}'
+        try:
+            conn = cnxn(dbName)
+            cursor = conn.cursor()
+            delete_query = f"DELETE FROM {self.db_name_day}.dbo.[{ticker_name}] WHERE Datetime = '{max_date_day}';"
+            cursor.execute(delete_query)
+            delete_query = f"DELETE FROM {self.db_name_interval}.dbo.[{ticker_name}] WHERE Datetime >= '{max_date_interval}';"
+            cursor.execute(delete_query)
+            conn.commit()
+            return f'Delet Max Date From {dbName}.[{ticker_name}]'
+        except:
+            return None
         
     def period_decision_maker(self, start_date, start_date_interval):
         period = {
@@ -93,7 +99,11 @@ class StockDataDownloader:
         return period
     
     def yf_download(self, ticker_name, period):
-        yf_ticker = yf.Ticker(f'{ticker_name}.NS')
+        if ticker_name[0] == '^':
+            ticker_name = f'{ticker_name}' 
+        else:
+            ticker_name = f'{ticker_name}.NS'
+        yf_ticker = yf.Ticker(ticker_name)
         df = yf_ticker.history(start=period['start'], end=period['end']).dropna().reset_index()
         df = self.yf_download_cleaning(df)
         df_interval = yf_ticker.history(start=period['startInterval'], end=period['endInterval'], interval='5m').dropna().reset_index()
@@ -105,6 +115,7 @@ class StockDataDownloader:
             df.rename(columns={'Date': 'Datetime'}, inplace=True)
         if df.empty:
             return df
+        # df = df[df['Datetime'] < '2024-08-19'].reset_index(drop=True)
         df = df[['Datetime', 'Open', 'High', 'Low', 'Close', 'Volume']]
         df[['Open', 'High', 'Low', 'Close']] = df[['Open', 'High', 'Low', 'Close']].round(2)
         df['Datetime'] = df['Datetime'].dt.tz_localize(None)
@@ -124,8 +135,4 @@ if __name__ == "__main__":
     downloader = StockDataDownloader()
     downloader.validation()
     result = downloader.StockDataDownloaderMain()
-
-
-
-
 
