@@ -22,8 +22,8 @@ if __name__ == "__main__":
     resultJob7 = JobmkDayPrediction() # 2m
     resultJob8 = JobSimulationPrediction() # 2m
     resultJob0 = JobSimPredMSE() # 30s
-    resultJob10 = jobPredictionModel() # 31m
-    resultJob11 = jobMarketPredictor() # 31m
+    # resultJob10 = jobPredictionModel() # 31m
+    # resultJob11 = jobMarketPredictor() # 31m
     resultJob12 = MkTopPrediction() # 31m
     resultJob13 = JobTomorrowAnalyzer() # 20s
 
