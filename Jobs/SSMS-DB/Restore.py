@@ -8,7 +8,9 @@ Created on Sun Mar 31 23:52:40 2024
 from SqlDatabase import DBRESTORE
 
 if __name__ == "__main__":
-    DBRESTORE('mkintervalmaster', './Backup')    
+    dbList = ['mkanalyzer', 'mkdaymaster', 'mkintervalmaster', 'mkintervalanalyzer', 'mkprediction']    
+    for dbName in dbList:
+        DBRESTORE(dbName, './Backup')    
 
 
 
