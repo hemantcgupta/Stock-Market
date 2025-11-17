@@ -43,14 +43,16 @@ import requests
 import pandas as pd
 import pytz
 def fetch_stock_data():
-    url = "https://groww.in/v1/api/stocks_fo_data/v4/charting_service/chart/exchange/NSE/segment/FNO/NIFTY24O1025050CE"
+    url = "https://groww.in/v1/api/charting_service/v2/chart/delayed/exchange/NSE/segment/CASH/BLS"
     params = {
-        "endTimeInMillis": 1728388589426,
+        "endTimeInMillis": 1739385000,
         "intervalInMinutes": 5,
-        "startTimeInMillis": 1722364200000
+        "startTimeInMillis": 1728388589
     }
     try:
         response = requests.get(url, params=params)
+        url = 'https://groww.in/v1/api/charting_service/v2/chart/delayed/exchange/NSE/segment/CASH/BLS?endTimeInMillis=1736337389000&intervalInMinutes=5&startTimeInMillis=1728388589'
+        response = requests.get(url)
         data = response.json() 
         return data
     except Exception as e:
@@ -66,7 +68,7 @@ if data:
     df[df['Datetime'] > '2024-10-08']
 
 
-
+df['Datetime'].dt.date.astype(str).nunique()
 
 
 # =============================================================================

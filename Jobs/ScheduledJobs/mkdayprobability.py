@@ -42,7 +42,7 @@ class mkDayProbability:
                 '''
             df = pd.read_sql(query, cnxn(self.db_name_analyzer))
             df['MaxDatetime'] = np.datetime64('NaT')
-        df['MinDatetime'] = df['MaxDatetime'] - pd.DateOffset(months=1)
+        df['MinDatetime'] = pd.to_datetime(df['MaxDatetime']) - pd.DateOffset(months=1)
         return df.to_dict('records')
     
     @retry(retries=3, delay=1)
@@ -60,6 +60,8 @@ class mkDayProbability:
         df = pd.read_sql(query, cnxn(self.db_name_analyzer))
         if pd.isna(MaxDatetime) or df['Datetime'].max() >= MaxDatetime:
             df = self.mkday_probability_data_process(ticker_name, stock_symbols_dict, df)
+            if not df.empty:
+                df['Datetime'] = pd.to_datetime(df['Datetime']).dt.strftime('%Y-%m-%d %H:%M:%S')
             result = Data_Inserting_Into_DB(df, self.db_name_analyzer, self.table_name_dprobability, 'append')
             return {**result, 'Message': 'New Data Added', 'tickerName': ticker_name}
         return {'Message': 'Already Upto-Date', 'tickerName': ticker_name}
@@ -78,6 +80,7 @@ class mkDayProbability:
             return {**stock_symbols_dict, 'status': 'error'}
         
     def mkday_probability_data_process(self, ticker_name, stock_symbols_dict, df):
+        df['Datetime'] = pd.to_datetime(df['Datetime'])
         df = df.sort_values(by='Datetime').reset_index(drop=True)
         df['MinDatetime'] = df['Datetime'] - pd.DateOffset(months=1)
         df.set_index('Datetime', inplace=True)

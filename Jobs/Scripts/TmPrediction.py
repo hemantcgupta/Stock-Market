@@ -10,6 +10,7 @@ from tqdm import tqdm
 import pandas as pd
 import numpy as np
 from scipy import stats
+from collections import Counter
 import yfinance as yf  
 pd.options.display.float_format = '{:.2f}'.format
 pd.set_option('display.max_columns', 30)
@@ -583,8 +584,20 @@ class TopPredictor:
     def analyze(self):
         df = self.fetchData().fillna('NA')
         df = df.sort_values(by=['Date', 'successCount', 'epochLossPL'], ascending=[False, False, True])
-        df['TmPredPL'] = df['TmPredPL5Summary'].str.split(', ').apply(lambda x: stats.mode([item.split(' :: ')[0] for item in x]).mode[0]).astype(int)
-        df['TmPredgotLoss'] = df['TmPredgotLoss5Summary'].str.split(', ').apply(lambda x: stats.mode([item.split(' :: ')[0] for item in x]).mode[0]).astype(int)
+        # df['TmPredPL'] = df['TmPredPL5Summary'].str.split(', ').apply(lambda x: stats.mode([item.split(' :: ')[0] for item in x]).mode[0]).astype(int)
+        df['TmPredPL'] = (
+            df['TmPredPL5Summary']
+            .str.split(', ')
+            .apply(lambda x: Counter([item.split(' :: ')[0] for item in x]).most_common(1)[0][0])
+            .astype(int)
+        )
+        # df['TmPredgotLoss'] = df['TmPredgotLoss5Summary'].str.split(', ').apply(lambda x: stats.mode([item.split(' :: ')[0] for item in x]).mode[0]).astype(int)
+        df['TmPredgotLoss'] = (
+            df['TmPredgotLoss5Summary']
+            .str.split(', ')
+            .apply(lambda x: Counter([item.split(' :: ')[0] for item in x]).most_common(1)[0][0])
+            .astype(int)
+        )
         dfP = df[['Date']].drop_duplicates().reset_index(drop=True)
         dfP['predDate'] = dfP['Date'].shift(1)
         dfP = dfP.dropna().reset_index(drop=True)

@@ -99,7 +99,7 @@ def JobTomorrowAnalyzer():
     # dfP1 = StockAnalyzer().analyze()
     # dfP1 = StockMarketPhasesAnalyzer.getMarketPhases(dfP1)
     # dfP2 = StockPredictorAnalyzer().analyze()
-    dfP3 = TopPredictor().analyze()
+    # dfP3 = TopPredictor().analyze()
     df = JobTomorrowAnalyzerMain()
     filename = './Sample Data/Tomorrow Market Prediction.xlsx'
     with pd.ExcelWriter(filename, engine='xlsxwriter') as writer:
@@ -115,9 +115,9 @@ def JobTomorrowAnalyzer():
         # worksheet.add_table(0, 0, len(dfP2), len(dfP2.columns) - 1, {'columns': [{'header': col} for col in dfP2.columns]})
         
         # Write dfP3 to Excel and create a table
-        dfP3.to_excel(writer, sheet_name='TOP 20', index=False)
-        worksheet = writer.sheets['TOP 20']
-        worksheet.add_table(0, 0, len(dfP3), len(dfP3.columns) - 1, {'columns': [{'header': col} for col in dfP3.columns]})
+        # dfP3.to_excel(writer, sheet_name='TOP 20', index=False)
+        # worksheet = writer.sheets['TOP 20']
+        # worksheet.add_table(0, 0, len(dfP3), len(dfP3.columns) - 1, {'columns': [{'header': col} for col in dfP3.columns]})
     
         # Write df to Excel and create a table
         df.to_excel(writer, sheet_name='Market Analysis', index=False)

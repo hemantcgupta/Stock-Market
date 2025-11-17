@@ -34,21 +34,6 @@ def validation():
 # =============================================================================
 # Fetch Min Max Datetime From Old Data for Each Ticker Names
 # =============================================================================
-# def fetch_max_dates():
-#     try:
-#         query = f'''
-#                 SELECT tickerName, max(Datetime) as MaxDatetime FROM {VAR.table_name_simulationPrediction}
-#                 group by tickerName
-#                 '''
-#         df = pd.read_sql(query, cnxn(VAR.db_name_analyzer))
-#     except Exception as e:
-#         query = f'''
-#             SELECT tickerName, max(Datetime) as MaxDatetime FROM {VAR.table_name_dprediction} 
-#             group by tickerName
-#             '''
-#         df = pd.read_sql(query, cnxn(VAR.db_name_analyzer))
-#         df['MaxDatetime'] = np.datetime64('NaT')
-#     return df.to_dict('records')  
 def fetch_max_dates():
     try:
         query_simulation = f'''
@@ -67,6 +52,7 @@ def fetch_max_dates():
     except Exception as e:
         df_prediction = pd.DataFrame(columns=['tickerName', 'MaxDatetime'])
         df_prediction['MaxDatetime'] = np.datetime64('NaT')
+    df_prediction.loc[~df_prediction['tickerName'].isin(df_simulation['tickerName']), 'MaxDatetime'] = np.datetime64('NaT')
     combined_df = pd.concat([df_simulation, df_prediction]).drop_duplicates(subset=['tickerName'], keep='first')
     # combined_df.loc[combined_df['tickerName'].isin(['^NSEI', '^NSEBANK', '^BSESN', 'NIFTY_FIN_SERVICE']), 'MaxDatetime'] = np.datetime64('NaT')
     return combined_df.to_dict('records')
@@ -105,11 +91,14 @@ def update_simulationPrediction(stock_symbols_dict):
     df = pd.merge(df1, df2, how='left', on='predDatetime')
     df = pd.merge(df, df3, how='left', on='predDatetime')
     df['predDatetime'].fillna(df['predDatetime'].max()+ pd.Timedelta(days=1), inplace=True)
+    if not df.empty:
+        df['Datetime'] = pd.to_datetime(df['Datetime']).dt.strftime('%Y-%m-%d %H:%M:%S')
+        df['predDatetime'] = pd.to_datetime(df['predDatetime']).dt.strftime('%Y-%m-%d %H:%M:%S')
     if pd.isna(MaxDatetime) or df['Datetime'].max() >= MaxDatetime:
         df = simulation_prediction_data_process(ticker_name, df)
-        result = Data_Inserting_Into_DB(df, VAR.db_name_analyzer, VAR.table_name_simulationPrediction, 'append')
-        return {**result, 'Message': 'New Data Added', 'tickerName': ticker_name}
-    return {'Message': 'Already Upto-Date', 'tickerName': ticker_name}
+        # result = Data_Inserting_Into_DB(df, VAR.db_name_analyzer, VAR.table_name_simulationPrediction, 'append')
+        return {'Message': 'New Data Added', 'tickerName': ticker_name, 'Dataframe': df}
+    return {'Message': 'Already Upto-Date', 'tickerName': ticker_name, 'Dataframe': None}
 
 
 def Delete_max_date(ticker_name, MaxDatetime):
@@ -150,6 +139,8 @@ def JobSimulationPrediction():
     stock_symbols = fetch_max_dates()
     with Pool(processes=int(cpu_count() * 0.8)) as pool:
         result = list(tqdm(pool.imap(update_simulationPrediction, stock_symbols), total=len(stock_symbols), desc=f'Update Table {VAR.table_name_simulationPrediction}'))
+    df = pd.concat([dct.get('Dataframe', None) for dct in result]).reset_index(drop=True)
+    result = Data_Inserting_Into_DB(df, VAR.db_name_analyzer, VAR.table_name_simulationPrediction, 'append')
     return result
     
 if __name__ == "__main__":

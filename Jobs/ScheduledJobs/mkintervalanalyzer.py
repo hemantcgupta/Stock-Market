@@ -21,8 +21,8 @@ from decorators.retry import retry
 class VAR:
     cpu_count = int(cpu_count() * 0.8)
     db_name_master = 'master'
-    db_name_day = 'mkdaymaster'
-    db_name_interval = 'mkintervalmaster'
+    db_name_day = 'mkgrowwdaymaster'
+    db_name_interval = 'mkgrowwintervalmaster'
     db_name_analyzer = 'mkanalyzer'
     db_name_ianalyzer = 'mkintervalanalyzer'
     table_name_ifeature = 'mkIntervalFeature'
@@ -43,8 +43,8 @@ def validation():
 def mkIntervalAnalyzerMain():
     query = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'"
     stockSymbols = pd.read_sql(query, cnxn(VAR.db_name_interval))['TABLE_NAME'].tolist()
-    result_day, result_interval = mkInterval_Data_Process(stockSymbols)
-    return result_day, result_interval
+    result = mkInterval_Data_Process(stockSymbols)
+    return result
 
 # =============================================================================
 # Multi Data Process for each Ticker Name
@@ -52,8 +52,8 @@ def mkIntervalAnalyzerMain():
 def mkInterval_Data_Process(stockSymbols):
     with Pool(processes=VAR.cpu_count) as pool:
         result = list(tqdm(pool.imap(fetch_db_data, stockSymbols), total=len(stockSymbols), desc='Updating mkintervalanalyzer and mkIntervalFeature'))    
-    result_day, result_interval = update_table(result, 'append')
-    return result_day, result_interval
+    # result = [fetch_db_data(tickerName) for tickerName in tqdm(stockSymbols, desc='Updating mkintervalanalyzer and mkIntervalFeature')]
+    return result
 
 # =============================================================================
 # Fetch each ticker from both master databse 'daymaster' and 'intervalmaster'
@@ -82,6 +82,9 @@ def fetch_db_data(tickerName):
             ORDER BY Datetime      
             '''
     df = pd.read_sql(query, cnxn(VAR.db_name_master))
+    if not df.empty:
+        df['Datetime'] = pd.to_datetime(df['Datetime'])
+    df = df.sort_values(by='Datetime', ascending=True).reset_index(drop=True)
     df = MovingAverage44(df)  
     df = df[df['Datetime'] > latest_date].reset_index(drop=True)
     df = yfDownloadProcessingInterval(df)
@@ -98,6 +101,11 @@ def fetch_db_data(tickerName):
     dfEtEx = pd.merge(EntryExitMinToMax(df), EntryExitMaxToMin(df), how='left', on='Date')    
     dfItCd = pd.merge(dfCandle, dfEtEx,how='left', on='Date')
     df, dfItCd = data_cleanning(df, dfItCd, tickerName)
+    if not df.empty:
+        df['Date'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m-%d %H:%M:%S')
+        df['Datetime'] = pd.to_datetime(df['Datetime']).dt.strftime('%Y-%m-%d %H:%M:%S')
+    if not dfItCd.empty:
+        dfItCd['Datetime'] = pd.to_datetime(dfItCd['Datetime']).dt.strftime('%Y-%m-%d %H:%M:%S')
     result = {'tableName': tickerName, VAR.db_name_ianalyzer: df, VAR.db_name_analyzer: dfItCd}
     return result
 
@@ -210,7 +218,16 @@ def data_cleanning(df, dfItCd, tickerName):
 def update_table(result, insertMethod):  
     result_interval = [Data_Inserting_Into_DB(dct.get(VAR.db_name_ianalyzer), VAR.db_name_ianalyzer, dct.get('tableName'), insertMethod) for dct in tqdm(result, desc=f'Update Table {VAR.db_name_ianalyzer}') if isinstance(dct, dict)]
     dfItCd = pd.concat([dct.get(VAR.db_name_analyzer) for dct in result if isinstance(dct, dict)]).reset_index(drop=True)
-    result_day = Data_Inserting_Into_DB(dfItCd, VAR.db_name_analyzer, VAR.table_name_ifeature, insertMethod)
+    # result_day = Data_Inserting_Into_DB(dfItCd, VAR.db_name_analyzer, VAR.table_name_ifeature, insertMethod)
+    result_day = [
+            Data_Inserting_Into_DB(
+                dct.get(VAR.db_name_analyzer), VAR.db_name_analyzer, VAR.table_name_ifeature, insertMethod
+            ) if isinstance(dct.get(VAR.db_name_analyzer), pd.DataFrame) and not dct.get(VAR.db_name_analyzer).empty else {
+                'dbName': VAR.db_name_analyzer,
+                dct.get('tickerName'): 'Unsuccessful - Empty or None DataFrame'
+            }
+            for dct in tqdm(result, desc=f'Update Table {VAR.db_name_analyzer}') if isinstance(dct, dict)
+        ]
     return result_day, result_interval
     
 # =============================================================================
@@ -218,8 +235,11 @@ def update_table(result, insertMethod):
 # =============================================================================
 def JobmkIntervalAnalyzer():
     validation()
-    result_day, result_interval = mkIntervalAnalyzerMain()
-    return result_day, result_interval
+    result = mkIntervalAnalyzerMain()
+    result_day, result_interval = update_table(result, 'append')
+    return result_day, result_interval 
+
+
 
 if __name__ == "__main__":
     result_day, result_interval = JobmkIntervalAnalyzer()

@@ -53,11 +53,14 @@ class mkDayMa:
         if not pd.isna(MinDatetime):
             query += f"and Datetime >= '{MinDatetime}'"
         df = pd.read_sql(query, cnxn(self.db_name_analyzer))
+        df['Datetime'] = pd.to_datetime(df['Datetime'])
         if pd.isna(MaxDatetime) or df['Datetime'].max() >= MaxDatetime:
+            df = df.sort_values(by='Datetime', ascending=True).reset_index(drop=True)
             df = self.MovingAverage44(df, MaxDatetime)
-            result = Data_Inserting_Into_DB(df, self.db_name_analyzer, self.table_name_dma, 'append')
-            return {**result, 'Message': 'New Data Added', 'tickerName': ticker_name}
-        return {'Message': 'Already Upto-Date', 'tickerName': ticker_name}
+            if not df.empty:
+                df['Datetime'] = pd.to_datetime(df['Datetime']).dt.strftime('%Y-%m-%d %H:%M:%S')
+            return {'Message': 'New Data Added', 'tickerName': ticker_name, 'Dataframe': df}
+        return {'Message': 'Already Upto-Date', 'tickerName': ticker_name, 'Dataframe': None}
 
     def Delete_max_date(self, dbName, stock_symbols_dict):
         try:
@@ -80,14 +83,14 @@ class mkDayMa:
         if not pd.isna(MaxDatetime):
             df = df[df['Datetime'] >= MaxDatetime].reset_index(drop=True)
         return df
-
+    
+    
     def update_all_mkday_ma(self):
         stock_symbols = self.fetch_max_dates()
-        # df = pd.DataFrame(stock_symbols)
-        # stock_symbols = df[df['tickerName'] == 'BLS'].to_dict('records')
-        # print(stock_symbols)
         with Pool(processes=self.cpu_count) as pool:
             results = list(tqdm(pool.imap(self.update_mkday_ma, stock_symbols), total=len(stock_symbols), desc='Update Table mkDayMA'))
+        df = pd.concat([dct.get('Dataframe', None) for dct in results]).reset_index(drop=True)
+        result = Data_Inserting_Into_DB(df, self.db_name_analyzer, self.table_name_dma, 'append')
         return results
 
 def JobmkDayMa():

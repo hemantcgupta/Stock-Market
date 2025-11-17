@@ -69,9 +69,9 @@ def update_SimPredMSE(stock_symbols_dict):
     df = pd.read_sql(query, cnxn(VAR.db_name_analyzer))
     if pd.isna(MaxDatetime) or df['Datetime'].max() >= MaxDatetime:
         df = SimPredMSE_data_process(ticker_name, stock_symbols_dict, df)
-        result = Data_Inserting_Into_DB(df, VAR.db_name_analyzer, VAR.table_name_simulationPredMSE, 'append')
-        return {**result, 'Message': 'New Data Added', 'tickerName': ticker_name}
-    return {'Message': 'Already Upto-Date', 'tickerName': ticker_name}
+        # result = Data_Inserting_Into_DB(df, VAR.db_name_analyzer, VAR.table_name_simulationPredMSE, 'append')
+        return {'Message': 'New Data Added', 'tickerName': ticker_name, 'Dataframe': df}
+    return {'Message': 'Already Upto-Date', 'tickerName': ticker_name, 'Dataframe': None}
 
 def Delete_max_date(dbName, stock_symbols_dict):
     try:
@@ -151,6 +151,8 @@ def JobSimPredMSE():
     stock_symbols = fetch_max_dates()
     with Pool(processes=int(cpu_count() * 0.8)) as pool:
         result = list(tqdm(pool.imap(update_SimPredMSE, stock_symbols), total=len(stock_symbols), desc=f'Update Table {VAR.table_name_simulationPredMSE}'))
+    df = pd.concat([dct.get('Dataframe', None) for dct in result]).reset_index(drop=True)
+    result = Data_Inserting_Into_DB(df, VAR.db_name_analyzer, VAR.table_name_simulationPredMSE, 'append')
     return result
     
 if __name__ == "__main__":

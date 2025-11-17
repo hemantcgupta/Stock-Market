@@ -71,11 +71,14 @@ def update_mkday_prediction(stock_symbols_dict):
         if not pd.isna(MinDatetime):
             query += f"and Interval.Datetime >= '{MinDatetime}'"
         df = pd.read_sql(query, cnxn(VAR.db_name_analyzer))
+        df = df.sort_values(by='Datetime', ascending=True).reset_index(drop=True)        
         if pd.isna(MaxDatetime) or df['Datetime'].max() >= MaxDatetime:
             df = mkday_prediction_data_process(ticker_name, stock_symbols_dict, df)
-            result = Data_Inserting_Into_DB(df, VAR.db_name_analyzer, VAR.table_name_dprediction, 'append')
-            return {**result, 'Message': 'New Data Added', 'tickerName': ticker_name}
-        return {'Message': 'Already Upto-Date', 'tickerName': ticker_name}
+            if not df.empty:
+                df['Datetime'] = pd.to_datetime(df['Datetime']).dt.strftime('%Y-%m-%d %H:%M:%S')
+            # result = Data_Inserting_Into_DB(df, VAR.db_name_analyzer, VAR.table_name_dprediction, 'append')
+            return {'Message': 'New Data Added', 'tickerName': ticker_name, 'Dataframe': df}
+        return {'Message': 'Already Upto-Date', 'tickerName': ticker_name, 'Dataframe': None}
     except Exception as e:
         return {'Message': e, 'tickerName': ticker_name}
 
@@ -95,6 +98,7 @@ def Delete_max_date(dbName, stock_symbols_dict):
 # Multi Process Group The 1 month Prediction 
 # =============================================================================
 def mkday_prediction_data_process(ticker_name, stock_symbols_dict, df):
+    df['Datetime'] = pd.to_datetime(df['Datetime'])
     df = df.sort_values(by='Datetime').reset_index(drop=True)
     df['MinDatetime'] = df['Datetime'] - pd.DateOffset(months=1)
     df.set_index('Datetime', inplace=True)
@@ -166,6 +170,8 @@ def JobmkDayPrediction():
     stock_symbols = fetch_max_dates()
     with Pool(processes=int(cpu_count() * 0.8)) as pool:
         result = list(tqdm(pool.imap(update_mkday_prediction, stock_symbols), total=len(stock_symbols), desc=f'Update Table {VAR.table_name_dprediction}'))
+    df = pd.concat([dct.get('Dataframe', None) for dct in result]).reset_index(drop=True)
+    result = Data_Inserting_Into_DB(df, VAR.db_name_analyzer, VAR.table_name_dprediction, 'append')
     return result
     
 if __name__ == "__main__":

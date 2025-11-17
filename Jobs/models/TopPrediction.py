@@ -24,10 +24,11 @@ import torch.optim as optim
 from imblearn.over_sampling import SMOTE
 from Scripts.dbConnection import cnxn, Data_Inserting_Into_DB
 from multiprocessing import Pool, cpu_count
+from collections import Counter
 
 class VAR:
     db_mkanalyzer = 'mkanalyzer'
-    db_mkintervalmaster = 'mkintervalmaster'
+    db_mkintervalmaster = 'mkgrowwintervalmaster'
 
 class MarketAnalyzer:
     def __init__(self, kwargs):
@@ -135,7 +136,7 @@ class StockPredictor:
                        WHEN MAX([Close]) = 0 OR SUM(Volume) = 0 THEN NULL
                        ELSE ((MAX([High]) - MIN([Low])) / MAX([Close])) * LOG(SUM(Volume) / COUNT(DISTINCT CONVERT(date, Datetime)))
                    END, 2) AS LS_Day
-            FROM mkdaymaster.dbo.[{self.tickerName}]
+            FROM mkgrowwdaymaster.dbo.[{self.tickerName}]
             GROUP BY Datetime, [High], [Low], [Close], [Volume]
         )
         SELECT c.*,  
@@ -209,7 +210,14 @@ class StockPredictor:
         X_remaining = df_remaining[self.features]
         y_remaining = df_remaining[target]
         
-        smote = SMOTE(random_state=self.random_state)
+        
+        class_counts = Counter(y_remaining)
+        # Find the minority class and its sample count
+        minority_class_count = min(class_counts.values())
+        # Set k_neighbors to (minority_class_count - 1) or 1 (whichever is larger)
+        k_neighbors = max(1, minority_class_count - 1)
+
+        smote = SMOTE(random_state=self.random_state, k_neighbors=k_neighbors)
         X_resampled, y_resampled = smote.fit_resample(X_remaining, y_remaining)
         
         scaler = StandardScaler()
@@ -378,12 +386,14 @@ def MkTopPrediction():
     ORDER BY Datetime ASC
     '''
     dateList = pd.read_sql(query, cnxn(VAR.db_mkanalyzer))['Datetime'].dt.date.astype(str).tolist()
+    skipDateList = ['2024-11-01']
     for date in dateList:
-        print(f'{date:#^75}')
-        result = topAccurateTickers(top=20, filterDate=date)
+        if date not in skipDateList:
+            print(f'{date:#^75}')
+            result = topAccurateTickers(top=20, filterDate=date)
     return result
     
 if __name__ == "__main__":
     result = MkTopPrediction()
     
-# ['^NSEBANK', '^NSEI', 'NIFTY_FIN_SERVICE', '^BSESN', 'BLS']    
+
