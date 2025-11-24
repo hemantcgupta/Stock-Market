@@ -8,7 +8,10 @@ Created on Sun Mar 31 23:52:40 2024
 from SqlDatabase import DBRESTORE
 
 if __name__ == "__main__":
-    dbList = ['mkanalyzer', 'mkdaymaster', 'mkintervalmaster', 'mkintervalanalyzer', 'mkprediction', 'mkgrowwinfo', 'mkgrowwdaymaster', 'mkgrowwintervalmaster', 'dms']
+    dbList = ['mkdaymaster', 'mkintervalmaster', 'mkanalyzer', 'mkintervalanalyzer', 'mkprediction', 'mkgrowwinfo', 'mkgrowwdaymaster', 'mkgrowwintervalmaster', 'dms']
     for dbName in dbList:
-        DBRESTORE(dbName, './Backup')    
-
+        try:
+            DBRESTORE(dbName, './Backup')    
+        except Exception as e:
+            print(e)
+            continue

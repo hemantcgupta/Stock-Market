@@ -38,7 +38,7 @@ class mkDayMa:
                 '''
             df = pd.read_sql(query, cnxn(self.db_name_analyzer))
             df['MaxDatetime'] = np.datetime64('NaT')
-        df['MinDatetime'] = df['MaxDatetime'] - pd.DateOffset(days=88)
+        df['MinDatetime'] = pd.to_datetime(df['MaxDatetime']) - pd.DateOffset(days=88)
         return df.to_dict('records')
 
     def update_mkday_ma(self, stock_symbols_dict):
@@ -54,6 +54,7 @@ class mkDayMa:
             query += f"and Datetime >= '{MinDatetime}'"
         df = pd.read_sql(query, cnxn(self.db_name_analyzer))
         df['Datetime'] = pd.to_datetime(df['Datetime'])
+        MaxDatetime = pd.to_datetime(MaxDatetime) if MaxDatetime is not None else None
         if pd.isna(MaxDatetime) or df['Datetime'].max() >= MaxDatetime:
             df = df.sort_values(by='Datetime', ascending=True).reset_index(drop=True)
             df = self.MovingAverage44(df, MaxDatetime)

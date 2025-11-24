@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from tqdm import tqdm
 import warnings
 warnings.filterwarnings('ignore')
-from Scripts.dbConnection import Data_Inserting_Into_DB, create_database, cnxn
+from Scripts.dbConnection import Data_Inserting_Into_DB, create_database, cnxn, Data_Inserting_Into_DB_New
 from multiprocessing import Pool, cpu_count
 
 class VAR:
@@ -58,57 +58,154 @@ def fetch_stock_data(tickerName, startTimeInMillis, endTimeInMillis, intervalInM
     return df
     
 
+# def groww_stock_data_download(tickerName):
+#     max_interval_days = 60
+#     defaultStartDate = datetime.now().date() - timedelta(days=120)
+#     defaultStartTime = f'{defaultStartDate} 00:00:00'
+#     now = datetime.now()
+#     if now.hour < 18:  # before 6 PM
+#         yesterday = now.date() - timedelta(days=1)
+#     else:
+#         yesterday = now.date()
+    
+#     endTimeInMillis = f'{yesterday} 23:59:59'
+#     intervalInMinutes = 5
+#     query_day = f'select max(Datetime) from [{tickerName}]'
+#     try:
+#         startTimeInMillis = pd.read_sql(query_day, cnxn(VAR.db_name_mkgrowwintervalmaster)).iloc[0][0]
+#         if pd.notnull(startTimeInMillis):  
+#             startTimeInMillis = (pd.to_datetime(startTimeInMillis) + timedelta(days=1)).strftime('%Y-%m-%d 00:00:00')
+#         else:
+#             startTimeInMillis = defaultStartTime
+#     except Exception as e:
+#         # print(f"Error fetching max datetime for {tickerName}: {e}")
+#         startTimeInMillis = defaultStartTime
+#     result = {'tableName': tickerName, 'Dataframe': None}
+#     currentStart = pd.to_datetime(startTimeInMillis)
+#     currentEnd = min(currentStart + timedelta(days=max_interval_days), pd.to_datetime(endTimeInMillis))
+#     while currentStart < pd.to_datetime(endTimeInMillis):
+#         start_time_str = currentStart.strftime('%Y-%m-%d %H:%M:%S')
+#         end_time_str = currentEnd.strftime('%Y-%m-%d %H:%M:%S')
+#         df = fetch_stock_data(tickerName, start_time_str, end_time_str, intervalInMinutes)
+#         if not df.empty:
+#             df['Datetime'] = pd.to_datetime(df['Datetime']) - pd.to_timedelta(pd.to_datetime(df['Datetime']).dt.minute % 5, unit='m')
+#             df['Datetime'] = pd.to_datetime(df['Datetime']).dt.strftime('%Y-%m-%d %H:%M:%S')
+#         if not isinstance(result.get('Dataframe'), pd.DataFrame):
+#             result = {'tableName': tickerName, 'Dataframe': df}
+#         else:
+#             result['Dataframe'] = pd.concat([result.get('Dataframe'), df]).reset_index(drop=True)
+#         currentStart = currentEnd + timedelta(seconds=1)
+#         currentEnd = min(currentStart + timedelta(days=max_interval_days), pd.to_datetime(endTimeInMillis))
+#     return result
+
 def groww_stock_data_download(tickerName):
     max_interval_days = 60
     defaultStartDate = datetime.now().date() - timedelta(days=120)
     defaultStartTime = f'{defaultStartDate} 00:00:00'
+
     now = datetime.now()
-    if now.hour < 18:  # before 6 PM
+    if now.hour < 18:
         yesterday = now.date() - timedelta(days=1)
     else:
         yesterday = now.date()
-    
+
     endTimeInMillis = f'{yesterday} 23:59:59'
     intervalInMinutes = 5
-    query_day = f'select max(Datetime) from [{tickerName}]'
+
+    query_day = f"SELECT MAX(Datetime) FROM [{tickerName}]"
+
+    # Fetch last stored datetime
     try:
-        startTimeInMillis = pd.read_sql(query_day, cnxn(VAR.db_name_mkgrowwintervalmaster)).iloc[0][0]
-        if pd.notnull(startTimeInMillis):  
-            startTimeInMillis = (pd.to_datetime(startTimeInMillis) + timedelta(days=1)).strftime('%Y-%m-%d 00:00:00')
+        last = pd.read_sql(query_day, cnxn(VAR.db_name_mkgrowwintervalmaster)).iloc[0][0]
+        if pd.notnull(last):
+            startTimeInMillis = (pd.to_datetime(last) + timedelta(days=1)).strftime('%Y-%m-%d 00:00:00')
         else:
             startTimeInMillis = defaultStartTime
     except Exception as e:
-        # print(f"Error fetching max datetime for {tickerName}: {e}")
-        startTimeInMillis = defaultStartTime
-    result = {'tableName': tickerName, 'Dataframe': None}
+        return {
+            'tableName': tickerName,
+            'Dataframe': None,
+            'status': 'failed',
+            'message': f"Error fetching max datetime: {str(e)}"
+        }
+
+    # Already up to date scenario
+    if startTimeInMillis >= endTimeInMillis:
+        return {
+            'tableName': tickerName,
+            'Dataframe': None,
+            'status': 'info',
+            'message': 'Already Updated - No new records found'
+        }
+
+    # Download data loop
+    result_df = pd.DataFrame()
     currentStart = pd.to_datetime(startTimeInMillis)
     currentEnd = min(currentStart + timedelta(days=max_interval_days), pd.to_datetime(endTimeInMillis))
+
     while currentStart < pd.to_datetime(endTimeInMillis):
-        start_time_str = currentStart.strftime('%Y-%m-%d %H:%M:%S')
-        end_time_str = currentEnd.strftime('%Y-%m-%d %H:%M:%S')
-        df = fetch_stock_data(tickerName, start_time_str, end_time_str, intervalInMinutes)
-        if not df.empty:
-            df['Datetime'] = pd.to_datetime(df['Datetime']) - pd.to_timedelta(pd.to_datetime(df['Datetime']).dt.minute % 5, unit='m')
-            df['Datetime'] = pd.to_datetime(df['Datetime']).dt.strftime('%Y-%m-%d %H:%M:%S')
-        if not isinstance(result.get('Dataframe'), pd.DataFrame):
-            result = {'tableName': tickerName, 'Dataframe': df}
-        else:
-            result['Dataframe'] = pd.concat([result.get('Dataframe'), df]).reset_index(drop=True)
+        start_str = currentStart.strftime('%Y-%m-%d %H:%M:%S')
+        end_str = currentEnd.strftime('%Y-%m-%d %H:%M:%S')
+
+        df = fetch_stock_data(tickerName, start_str, end_str, intervalInMinutes)
+
+        if df is not None and not df.empty:
+            df['Datetime'] = pd.to_datetime(df['Datetime'])
+            df['Datetime'] = df['Datetime'] - pd.to_timedelta(df['Datetime'].dt.minute % 5, unit='m')
+            df['Datetime'] = df['Datetime'].dt.strftime('%Y-%m-%d %H:%M:%S')
+
+            result_df = pd.concat([result_df, df]).reset_index(drop=True)
+
         currentStart = currentEnd + timedelta(seconds=1)
         currentEnd = min(currentStart + timedelta(days=max_interval_days), pd.to_datetime(endTimeInMillis))
-    return result
- 
-def update_table(result, insertMethod):
-    result = [
-        Data_Inserting_Into_DB(
-            dct.get('Dataframe'), VAR.db_name_mkgrowwintervalmaster, dct.get('tableName'), insertMethod
-        ) if isinstance(dct.get('Dataframe'), pd.DataFrame) and not dct.get('Dataframe').empty else {
-            'dbName': VAR.db_name_mkgrowwintervalmaster,
-            dct.get('tableName'): 'Unsuccessful - Empty or None DataFrame'
+
+    # Final return based on result
+    if result_df.empty:
+        return {
+            'tableName': tickerName,
+            'Dataframe': None,
+            'status': 'failed',
+            'message': 'No data returned from API'
         }
-        for dct in tqdm(result, desc='Update Table')
-    ]
-    return result
+
+    return {
+        'tableName': tickerName,
+        'Dataframe': result_df,
+        'status': 'success',
+        'message': f'New records fetched: {len(result_df)}'
+    }
+
+ 
+# def update_table(result, insertMethod):
+#     result = [
+#         Data_Inserting_Into_DB(
+#             dct.get('Dataframe'), VAR.db_name_mkgrowwintervalmaster, dct.get('tableName'), insertMethod
+#         ) if isinstance(dct.get('Dataframe'), pd.DataFrame) and not dct.get('Dataframe').empty else {
+#             'dbName': VAR.db_name_mkgrowwintervalmaster,
+#             dct.get('tableName'): 'Unsuccessful - Empty or None DataFrame'
+#         }
+#         for dct in tqdm(result, desc='Update Table')
+#     ]
+#     return result
+
+def update_table(result, insertMethod):
+    final_result = []
+    for dct in tqdm(result, desc="Updating DB Tables"):
+        table_name = dct.get("tableName")
+        df = dct.get("Dataframe")
+        if isinstance(df, pd.DataFrame) and not df.empty:
+            insert_response = Data_Inserting_Into_DB_New(
+                df, VAR.db_name_mkgrowwintervalmaster, table_name, insertMethod
+            )
+            final_result.append(insert_response)
+        else:
+            final_result.append({
+                "dbName": VAR.db_name_mkgrowwintervalmaster,
+                "tableName": table_name,
+                "status": dct.get("status"),
+                "message": dct.get("message")
+            })
+    return final_result
    
 def save_parquet_files(df_list):
     df = pd.concat(df_list).reset_index(drop=True)

@@ -23,7 +23,8 @@ from functools import lru_cache
 #                 "PWD=hemantcgupta")
 #     return pyodbc.connect(cnxn_str)
 
-@lru_cache(maxsize=None, typed=False)
+# @lru_cache(maxsize=None, typed=False)
+    
 def cnxn(dbName):
     cnxn_str = (
         "Driver={ODBC Driver 18 for SQL Server};"
@@ -63,7 +64,7 @@ def create_database(dbName):
 # =============================================================================
 # Data Inserting into tables
 # =============================================================================
-@lru_cache(maxsize=None, typed=False)
+# @lru_cache(maxsize=None, typed=False)
 def get_engine(dbName):
     params = urllib.parse.quote_plus('''DRIVER=ODBC Driver 18 for SQL Server;
                                         SERVER=localhost,1433;
@@ -77,7 +78,6 @@ def get_engine(dbName):
 
 def Data_Inserting_Into_DB(df, dbName, Table_Name, insertMethod):
     try:
-        
         engine = get_engine(dbName)
         @sqlalchemy.event.listens_for(engine, 'before_cursor_execute')
         def receive_before_cursor_execute(conn, cursor, statement, params, context, executemany):
@@ -92,3 +92,40 @@ def Data_Inserting_Into_DB(df, dbName, Table_Name, insertMethod):
     except Exception as e:
         print(f"Data Insert Into DB Unsuccessful In: {round(time.time()-start)} Sec; Error: {str(e)}")
         return {'dbName': dbName, Table_Name: e}
+    
+def Data_Inserting_Into_DB_New(df, dbName, tableName, insertMethod):
+    start = time.time()
+    try:
+        engine = get_engine(dbName)
+
+        @sqlalchemy.event.listens_for(engine, 'before_cursor_execute')
+        def receive_before_cursor_execute(conn, cursor, statement, params, context, executemany):
+            if executemany:
+                cursor.fast_executemany = True
+
+        chunksize = len(df) if len(df) <= 1000 else max(1, int(len(df) / 10))
+
+        df.to_sql(tableName, engine, if_exists=insertMethod, index=False, chunksize=chunksize)
+
+        return {
+            'dbName': dbName,
+            'tableName': tableName,
+            'status': 'success',
+            'message': f'Inserted successfully in {round(time.time() - start, 2)} sec'
+        }
+
+    except Exception as e:
+        err_msg = f'Insert failed in {round(time.time() - start, 2)} sec | Error: {str(e)}'
+        print(err_msg)
+
+        return {
+            'dbName': dbName,
+            'tableName': tableName,
+            'status': 'failed',
+            'message': err_msg
+        }
+
+    
+    
+    
+    

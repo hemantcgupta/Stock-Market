@@ -45,7 +45,7 @@ class mkDayProbability:
         df['MinDatetime'] = pd.to_datetime(df['MaxDatetime']) - pd.DateOffset(months=1)
         return df.to_dict('records')
     
-    @retry(retries=3, delay=1)
+    # @retry(retries=3, delay=1)
     def update_mkday_probability(self, stock_symbols_dict):
         resultD = self.Delete_max_date(self.db_name_analyzer, stock_symbols_dict)
         ticker_name = stock_symbols_dict.get('tickerName')
@@ -99,6 +99,7 @@ class MultiDataProcessor:
         
     def multiprocessing(self):
         MaxDatetime = self.stock_symbols_dict.get('MaxDatetime')
+        MaxDatetime = pd.to_datetime(MaxDatetime) if MaxDatetime is not None else None
         DateRange = [(current_date, past_date) for current_date, past_date in zip(self.df.index, self.df['MinDatetime']) if pd.isna(MaxDatetime) or current_date >= MaxDatetime]
         result = [self.probability_process(arg) for arg in DateRange]
         return result

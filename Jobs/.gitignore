@@ -205,3 +205,10 @@ yarn-error.log*
 # external File skips
 /Data
 /config
+
+
+# Ignore entire folder
+SSMS-DB/Backup/
+
+# Ignore .zip file
+SSMS-DB/Backup.zip

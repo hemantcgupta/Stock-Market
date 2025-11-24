@@ -48,7 +48,7 @@ def fetch_max_dates():
             '''
         df = pd.read_sql(query, cnxn(VAR.db_name_analyzer))
         df['MaxDatetime'] = np.datetime64('NaT')
-    df['MinDatetime'] = df['MaxDatetime'] - pd.DateOffset(months=1)
+    df['MinDatetime'] = pd.to_datetime(df['MaxDatetime']) - pd.DateOffset(months=1)
     return df.to_dict('records')   
 
 # =============================================================================
@@ -71,8 +71,9 @@ def update_mkday_prediction(stock_symbols_dict):
         if not pd.isna(MinDatetime):
             query += f"and Interval.Datetime >= '{MinDatetime}'"
         df = pd.read_sql(query, cnxn(VAR.db_name_analyzer))
-        df = df.sort_values(by='Datetime', ascending=True).reset_index(drop=True)        
-        if pd.isna(MaxDatetime) or df['Datetime'].max() >= MaxDatetime:
+        df = df.sort_values(by='Datetime', ascending=True).reset_index(drop=True) 
+        MaxDatetime = pd.to_datetime(MaxDatetime) if MaxDatetime is not None else None
+        if pd.isna(MaxDatetime) or pd.to_datetime(df['Datetime'].max()) >= MaxDatetime:
             df = mkday_prediction_data_process(ticker_name, stock_symbols_dict, df)
             if not df.empty:
                 df['Datetime'] = pd.to_datetime(df['Datetime']).dt.strftime('%Y-%m-%d %H:%M:%S')
@@ -120,6 +121,7 @@ class MultiDataProcessor:
         
     def multiprocessing(self):
         MaxDatetime = self.stock_symbols_dict.get('MaxDatetime')
+        MaxDatetime = pd.to_datetime(MaxDatetime) if MaxDatetime is not None else None
         DateRange = [(current_date, past_date) for current_date, past_date in zip(self.df.index, self.df['MinDatetime']) if pd.isna(MaxDatetime) or current_date >= MaxDatetime]
         result = [self.prediction_process(arg) for arg in DateRange]
         return result

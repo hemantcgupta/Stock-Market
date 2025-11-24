@@ -29,7 +29,7 @@ class mkDayAnalyzer:
         try:
             query = f"select tickerName, max(Datetime) as Datetime from {self.table_name_dfeature} group by tickerName order by tickerName"
             dfF = pd.read_sql(query, cnxn('mkanalyzer'))
-            FeatureMaxDict = dict(zip(dfF['tickerName'], dfF['Datetime'].dt.strftime('%Y-%m-%d')))
+            FeatureMaxDict = dict(zip(dfF['tickerName'], pd.to_datetime(dfF['Datetime']).dt.strftime('%Y-%m-%d')))
         except:
             FeatureMaxDict = {}
         try:
@@ -56,7 +56,7 @@ class mkDayAnalyzer:
         result_seasonality = self.update_table(result, self.db_name_analyzer, self.table_name_dseasonality, 'append')
         return {'feature': result_feature, 'seasonality': result_seasonality}
         
-    def fetch_db_data(self, tickerName):
+    def fetch_db_data(self, tickerName='BLS'):
         query = f'select * from [{tickerName}]'
         if filterYear:= self.SeasonalityMaxDict.get(tickerName):
             query += f" where YEAR(cast(Datetime as Date)) >= '{filterYear}'"

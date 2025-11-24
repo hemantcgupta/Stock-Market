@@ -94,7 +94,8 @@ def update_simulationPrediction(stock_symbols_dict):
     if not df.empty:
         df['Datetime'] = pd.to_datetime(df['Datetime']).dt.strftime('%Y-%m-%d %H:%M:%S')
         df['predDatetime'] = pd.to_datetime(df['predDatetime']).dt.strftime('%Y-%m-%d %H:%M:%S')
-    if pd.isna(MaxDatetime) or df['Datetime'].max() >= MaxDatetime:
+    MaxDatetime = pd.to_datetime(MaxDatetime) if MaxDatetime is not None else None
+    if pd.isna(MaxDatetime) or pd.to_datetime(df['Datetime'].max()) >= MaxDatetime:
         df = simulation_prediction_data_process(ticker_name, df)
         # result = Data_Inserting_Into_DB(df, VAR.db_name_analyzer, VAR.table_name_simulationPrediction, 'append')
         return {'Message': 'New Data Added', 'tickerName': ticker_name, 'Dataframe': df}
